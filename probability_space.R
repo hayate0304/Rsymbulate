@@ -1,6 +1,7 @@
 setwd("C:/Users/lucki/Desktop/Frost Research/Rsymbulate")
 source("seed.R")
 source("sequences.R")
+library(rlist)
 
 ProbabilitySpace <- function(drawFunc){
   me <- list(
@@ -56,22 +57,46 @@ check_same.ProbabilitySpace <- function(self, other){
     stop("Events must be defined on same probability space.")
 }
 
-`%*%` <- function(self, other){
-  UseMethod("%*%")
+`*` <- function(self, other){
+  UseMethod("*")
 }
 
-`%*%.default` <- function(self, other){
+`*.default` <- function(self, other){
   return(NULL)
 }
 
-`%*%.ProbabilitySpace` <- function(self, other){
-  draw <- function(self, other){
-    a = draw(self)
-    b = draw(other)
-    return(c(a, b))
+`*.ProbabilitySpace` <- function(self, other){
+  
+  # Create function "dr" to pass to ProbabilitySpace. If I change this function's name 
+  # to "draw" then R will be aborted since the function's name mess up with the method
+  # "draw" in BoxModel.
+  dr <- function(self, other){
+    return(c(draw(self), draw(other)))
   }
-  return(ProbabilitySpace(drawFunc = draw))
-#  return(c(draw(self), draw(other)))
+  return(ProbabilitySpace(dr))
+}
+
+`**` <- function(self, exponent){
+  UseMethod("**")
+}
+
+`**` <- function(self, exponent){
+  return(NULL)
+}
+
+`**` <- function(self, exponent){
+  if (is.infinite(exponent)){
+    dr <- function(){
+      seed <- get_seed()
+      
+      x <- function(n){
+        set.seed(seed)
+        replicate(as.integer(n), draw_inds(1))
+        
+        return(self$box[draw_inds(1)])
+      }
+    }
+  }
 }
 
 #--------------------------------------------------
@@ -122,8 +147,7 @@ BoxModel <- function(box, size = 1, replace = TRUE,
 # }
 
 draw.BoxModel <- function(self){
-  print("In BoxModel")
-  
+
   draw_inds <- function(size){
     return(sample(length(self$box), size, self$replace, self$prob)) 
   }
@@ -167,7 +191,7 @@ DeckOfCards <- function(size = 1, replace = FALSE, order_matters = TRUE){
              probs = NULL,
              order_matters = order_matters)
   
-  class(me) <- list.append(class(me), "ProbabilitySpace", "BoxModel", "DeckOfCards")
+  class(me) <- list.append(class(me), "DeckOfCards", "BoxModel", "ProbabilitySpace")
   return(me)
 }
 
