@@ -1,4 +1,5 @@
-setwd("C:/Users/lucki/Desktop/Frost Research/Rsymbulate")
+#setwd("C:/Users/lucki/Desktop/Frost Research/Rsymbulate")
+setwd("D:/Desktop/Frost Research/Rsymbulate")
 source("seed.R")
 source("sequences.R")
 library(rlist)
