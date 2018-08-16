@@ -1,6 +1,7 @@
 
 source("probability_space.R")
-source("scalar.R")
+source("utils.R")
+
 # Defines a random variable.
 #     
 # A random variable is a function which maps an outcome of
@@ -69,7 +70,7 @@ sim.RV <- function(self, n){
   # Returns:
   #   Results: A list-like object containing the simulation results.
   
-  # To be implemented  
+  warning("To be implemented  ")
 }
 
 call <- function(self, input) UseMethod("call")
@@ -77,11 +78,14 @@ call <- function(self, input) UseMethod("call")
 call.default <- function(self, input) return(NULL)
 
 call.RV <- function(self, input){
-  print("Warning: Calling an RV as a function simply applies the function that defines 
-        the RV to the input, regardless of whether the input is a valid outcome in 
-        the underlying probability space.")
+  cat("Warning: Calling an RV as a function simply applies the function that defines\n
+the RV to the input, regardless of whether the input is a valid outcome in\n 
+the underlying probability space.\n")
   
-  dummy_draw = draw(self$proSpace)
+  dummy_draw = draw(self$probSpace)
+  #
+  #paste("Dummy: ", dummy_draw)
+
   
   # R doesn't have scalar type
   if (is.atomic(input)){
@@ -92,28 +96,26 @@ call.RV <- function(self, input){
     } else if (length(input) != length(dummy_draw))
       stop("Input has wrong length")
     
-    if (all(sapply(input, typeof) == sapply(dummy_draw, typeof))){
+    if (all(sapply(input, is.numeric) == sapply(dummy_draw, is.numeric))){
       return(self$fun(input))
-    } else {
-      stop(paste("Expect a(n) ", typeof(dummy_draw), ". Was given 
+    } else
+      stop(paste("Expect a(n) ", typeof(dummy_draw), ". Was given
                  a(n) ", typeof(input), "."))
-    }
+    
+   
   } else if (is.list(input)){
     if (!(is.list(dummy_draw) && identical(dim(input), dim(dummy_draw))))
       stop(paste("The underlying probability space returns a Homogeneous
                  or different dimension. A(n) ", class(input), " with dim ",
                  length(dim(input)), " was given."))
     
-    if (identical(typeof(dummy_draw), typeof(input))){
+    if (identical(class(dummy_draw), class(input))){
       return(self$fun(input))
     } else 
       stop(paste("Expect a(n) ", typeof(dummy_draw), ". Was given 
                  a(n) ", typeof(input), "."))
       
   }
-  
-  
-  
 }
 
 check_same_probSpace.RV <- function(self, other){
@@ -123,9 +125,9 @@ check_same_probSpace.RV <- function(self, other){
     check_same(self$probSpace, other$probSpace)
 }
 
-apply <- function(self, func) UseMethod("apply")
-
-apply.default <- function(self, func) return(NULL)
+# apply <- function(self, func) UseMethod("apply")
+# 
+# apply.default <- function(self, func) return(NULL)
 
 apply.RV <- function(self, func){
   # Transform a random variable by a function.
@@ -148,9 +150,10 @@ apply.RV <- function(self, func){
   #   return log(x ** 2)
   # Y = X.apply(g)
   
-  f_new <- function(outcome)
-    return(func(self$fun(outcome)))
-  return(call(self$probSpace, f_new))
+  # f_new <- function(outcome)
+  #   return(func(self$fun(outcome)))
+  
+  return(RV(self$probSpace, func))
 }
 
 #-----------------------------------------
@@ -160,31 +163,59 @@ apply.RV <- function(self, func){
 
 # e.g., abs(X)
 abs.RV <- function(self){
-  return(apply(self, function(x) abs(x)))
+  return(apply.RV(self, function(x) abs(x)))
 } 
   
 operation_factory <- function(self, op) UseMethod("operation_factory")
 
 operation_factory.default <- function(self, op) return(NULL)
 
-operation_factory.RV <- function(self, op){
-  # The code for most operations (+, -, *, /, ...) is the
-  # same, except for the operation itself. The following 
-  # factory function takes in the the operation and 
-  # generates the code to perform that operation.
-  
-  op_fun <- function(self, other){
-    check_same_probSpace(self, other)
-    if (is_scalar(other)){
-      return(apply(self, function(x) op(x, other)))
-    } else if (inherits(other, "RV")){
-      fun <- function(outcome){
-        a = self$fun(outcome)
-        b = other$fun(outcome)
-      }
+# operation_factory.RV <- function(self, op){
+#   # The code for most operations (+, -, *, /, ...) is the
+#   # same, except for the operation itself. The following 
+#   # factory function takes in the the operation and 
+#   # generates the code to perform that operation.
+#   
+#   op_fun <- function(self, other){
+#     check_same_probSpace(self, other)
+#     if (is_scalar(other)){
+#       return(apply(self, function(x) op(x, other)))
+#     } else if (inherits(other, "RV")){
+#       fun <- function(outcome){
+#         a = self$fun(outcome)
+#         b = other$fun(outcome)
+#         
+#         ## Can be reduce to 1 if-else
+#         if (is_vector(a) && is_vector(b) && length(a) == length(b)){
+#           return(op(a, b))
+#         } else if (is_scalar(a) && is_scalar(b)){
+#           return(op(a, b))
+#         } else 
+#           stop(paste("Could not perform operation on the outcomes ",
+#                      toString(a), " and ", toString(b)))
+#       }
+#     } else 
+#       warning("Not Implemented")
+#     
+#   }
+#   return(op_fun)
+# }
+
+`%+%` <- function(self, other) UseMethod("%+%")
+
+`%+%.default` <- function(self, other) return(NULL)
+
+`%+%.RV` <- function(self, other){
+  check_same_probSpace(self, other)
+  if (is_scalar(other)){
+    return(apply.RV(self, function(x) x + other))
+  } else if (inherits(other, "RV")){
+    func <- function(x){
+      x + other$fun(draw(other$probSpace))
     }
-    
-  }
+    return(apply.RV(self, func))
+  } else 
+    warning("NotImplemented")
 }
 
   

@@ -52,13 +52,13 @@ check_same.ProbabilitySpace <- function(self, other){
     stop("Events must be defined on same probability space.")
 }
 
-# `%*%` <- function(self, other){
-#   UseMethod("%*%")
-# }
-# 
-# `%*%.default` <- function(self, other){
-#   return(NULL)
-# }
+`%*%` <- function(self, other){
+  UseMethod("%*%")
+}
+
+`%*%.default` <- function(self, other){
+  return(NULL)
+}
 
 `%*%.ProbabilitySpace` <- function(self, other){
   
@@ -131,6 +131,11 @@ BoxModel <- function(box, size = 1, replace = TRUE,
   } else if (is.list(box)){
       self.box = unlist(lapply(
         seq_along(box), function(x) rep(names(box)[x], box[[x]])))
+      
+      tryCatch(
+        self.box <- as.integer(self.box),
+        warning = function(c) invisible()
+      )
   } else 
       stop("Box must be specified either as a vector or a list.")
   
