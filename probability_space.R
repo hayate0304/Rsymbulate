@@ -1,5 +1,5 @@
-#setwd("C:/Users/lucki/Desktop/Frost Research/Rsymbulate")
-setwd("D:/Desktop/Frost Research/Rsymbulate")
+setwd("C:/Users/lucki/Desktop/Frost Research/Rsymbulate")
+#setwd("D:/Desktop/Frost Research/Rsymbulate")
 source("seed.R")
 source("sequences.R")
 library(rlist)
@@ -21,10 +21,7 @@ ProbabilitySpace <- function(drawFunc){
 
 draw <- function(self)  UseMethod("draw")
 
-draw.default <- function(self){
-  print("In default")
-  return(NULL)
-}
+draw.default <- function(self)  return(NULL)
 
 draw.ProbabilitySpace <- function(self){
 #  print("In PS")
@@ -36,9 +33,10 @@ sim <- function(self, n)  UseMethod("sim")
 sim.default <- function(self, n)  return(NULL)
 
 sim.ProbabilitySpace <- function(self, n){
-  # vect <- numeric(length(n))
-  # for (i in 1:n) vect[i] <- draw(self)
-  return(t(replicate(n, draw(self))))
+  if (length(draw(self)) == 1){
+    return(Results(replicate(n, draw(self))))
+  } else
+    return(Results(t(replicate(n, draw(self)))))
 }
 
 check_same <- function(self, other)  UseMethod("check_same")
@@ -131,11 +129,14 @@ BoxModel <- function(box, size = 1, replace = TRUE,
   } else if (is.list(box)){
       self.box = unlist(lapply(
         seq_along(box), function(x) rep(names(box)[x], box[[x]])))
+      #print(self.box)
       
       tryCatch(
         self.box <- as.integer(self.box),
         warning = function(c) invisible()
       )
+      
+      #print(self.box)
   } else 
       stop("Box must be specified either as a vector or a list.")
   
@@ -198,7 +199,7 @@ draw.BoxModel <- function(self){
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 DeckOfCards <- function(size = 1, replace = FALSE, order_matters = TRUE){
   deck <- paste(rep(c(2:10, "J", "Q", "K", "A"), 4),  #card values
-                rep(c("Diamonds", "Hearts", "Clubs", "Spades"), each = 13)) #suits
+                rep(c("Diamonds", "Hearts", "Clubs", "Spades"), each = 13)) #asuits
   
   me <- list(box = deck,
              size = size,

@@ -70,7 +70,10 @@ sim.RV <- function(self, n){
   # Returns:
   #   Results: A list-like object containing the simulation results.
   
-  warning("To be implemented  ")
+  if (length(draw(self)) == 1){
+    return(RVResults(replicate(n, draw(self))))
+  } else
+    return(RVResults(t(replicate(n, draw(self)))))
 }
 
 call <- function(self, input) UseMethod("call")
@@ -218,6 +221,22 @@ operation_factory.default <- function(self, op) return(NULL)
     warning("NotImplemented")
 }
 
+`%-%` <- function(self, other) UseMethod("%-%")
+
+`%-%.default` <- function(self, other) return(NULL)
+
+`%-%.RV` <- function(self, other){
+  check_same_probSpace(self, other)
+  if (is_scalar(other)){
+    return(apply.RV(self, function(x) x - other))
+  } else if (inherits(other, "RV")){
+    func <- function(x){
+      x - other$fun(draw(other$probSpace))
+    }
+    return(apply.RV(self, func))
+  } else 
+    warning("NotImplemented")
+}
   
 
 

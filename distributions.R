@@ -1,0 +1,42 @@
+
+source("probability_space.R")
+library(ggplot2)
+library(rlist)
+
+Distribution <- function(params, discrete = TRUE){
+  me <- list()
+  
+  class(me) <- list.append(class(me), "Distribution", "ProbabilitySpace")
+  return(me)
+}
+
+Binomial <- function(n, p){
+  # Defines a probability space for a binomial
+  # distribution.
+  # 
+  # Attributes:
+  #   n (int): number of trials
+  # p (float): probability (number between 0 and 1)
+  # that each trial results in a "success" (i.e., 1)
+  
+  if (n >= 0 && is.numeric(n) && round(n) == n){
+    self.n = n
+  } else 
+    stop("n must be a non-negative integer")
+  
+  if (p >= 0 && p <= 1){
+    self.p = p
+  } else 
+    stop("p must be between 0 and 1")
+  
+  me <- list(n = self.n,
+             p = self.p)
+  class(me) <- list.append(class(me), "Binomial", "Distribution", 
+                           "ProbabilitySpace")
+  return(me)
+}
+
+draw.Binomial <- function(self)
+  return(rbinom(1, self$n, self$p))
+
+
