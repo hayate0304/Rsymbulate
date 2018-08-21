@@ -1,13 +1,13 @@
 
 setwd("C:/Users/lucki/Desktop/Frost Research/Rsymbulate")
-# source("utils.py")
+source("utils.R")
+source("plot.R")
 
 #---------------------------------------------------------
 #             Results Class
 #---------------------------------------------------------
 Results <- function(results){
   me <- list(results = results)
-
   class(me) <- append(class(me), "Results")
 
   return(me)
@@ -23,9 +23,10 @@ Results <- function(results){
 #   #print(self)
 # }
 
-# apply <- function(self, fun) UseMethod("apply")
+Apply <- function(self, fun) UseMethod("Apply")
+Apply.default <- function(self, fun) return(NULL)
 
-apply.Results <- function(self, fun){
+Apply.Results <- function(self, fun){
   return(Results(apply(self$results, 1, fun)))
 }
 
@@ -125,5 +126,69 @@ RVResults <- function(results){
   
   class(me) <- list.append(class(me), "RVResults", "Results")
   return(me)
+}
+
+plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
+                            jitter=FALSE, bins=NULL, add = FALSE){
+  i <- 0
+  dim <- get_dimesion(self)
+  if (dim == 0){
+    heights <- as.vector(tabulate(self))
+    discrete <- is_discrete(heights)
+    #paste("Dis: ", discrete)
+    
+    if (identical(type, NULL)){
+      if (discrete){
+        type <- "impulse"
+      } else 
+        type <- "hist"
+    }
+    if (identical(alpha, NULL))
+      alpha <- 0.5
+    if (identical(bins, NULL))
+      bins <- 30
+    
+    color <- get_next_color()
+    
+    #--------------------------------------
+    ## if density in type to be implemented
+    #--------------------------------------
+    
+    if (is.element("hist", type) || is.element("bar", type)){
+      hist(self$results, breaks = bins, 
+           col = rgb(color(), alpha = alpha),
+           freq = !normalize)
+      if (normalize){
+        title(ylab = "Relative Frequency")
+      } else 
+        title(ylab = "Count")
+    }
+    else if (is.element("impulse", type)){
+      x <- as.double(names(tabulate(self)))
+      y <- as.vector(tabulate(self))
+      print("Here")
+      print(y)
+      
+      if (identical(alpha, NULL)) 
+        alpha <- 0.7
+      if (normalize) 
+        y <- y / sum(y)
+      if (jitter){
+        a <- 0.05 * (max(x) - min(x))
+        noise <- runif(1, -a, a)
+        x <- x + noise
+      }
+      print(a)
+      print(x)
+      
+      # plot the impulses
+      vlines(x, y, color, alpha, normalize, add)
+      if (normalize){
+        title(ylab = "Relative Frequency")
+      } else 
+        title(ylab = "Count") 
+        
+    }
+  }
 }
 

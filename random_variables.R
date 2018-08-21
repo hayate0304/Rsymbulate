@@ -128,21 +128,21 @@ check_same_probSpace.RV <- function(self, other){
     check_same(self$probSpace, other$probSpace)
 }
 
-# apply <- function(self, func) UseMethod("apply")
+# Apply <- function(self, func) UseMethod("Apply")
 # 
-# apply.default <- function(self, func) return(NULL)
+# Apply.default <- function(self, func) return(NULL)
 
-apply.RV <- function(self, func){
+Apply.RV <- function(self, func){
   # Transform a random variable by a function.
   # 
   # Args:
-  #   function: function to apply to the random variable
+  #   function: function to Apply to the random variable
   # 
   # Example:
   #   X = RV(Exponential(1))
-  # Y = X.apply(log)
+  # Y = X.Apply(log)
   # 
-  # Note: For most standard functions, you can apply the function to
+  # Note: For most standard functions, you can Apply the function to
   # the random variable directly. For example, in the example above,
   # Y = log(X) would have been equivalent and more readable.
   # 
@@ -151,7 +151,7 @@ apply.RV <- function(self, func){
   # Example:
   #   def g(x):
   #   return log(x ** 2)
-  # Y = X.apply(g)
+  # Y = X.Apply(g)
   
   # f_new <- function(outcome)
   #   return(func(self$fun(outcome)))
@@ -166,7 +166,7 @@ apply.RV <- function(self, func){
 
 # e.g., abs(X)
 abs.RV <- function(self){
-  return(apply.RV(self, function(x) abs(x)))
+  return(Apply.RV(self, function(x) abs(x)))
 } 
   
 operation_factory <- function(self, op) UseMethod("operation_factory")
@@ -182,7 +182,7 @@ operation_factory.default <- function(self, op) return(NULL)
 #   op_fun <- function(self, other){
 #     check_same_probSpace(self, other)
 #     if (is_scalar(other)){
-#       return(apply(self, function(x) op(x, other)))
+#       return(Apply(self, function(x) op(x, other)))
 #     } else if (inherits(other, "RV")){
 #       fun <- function(outcome){
 #         a = self$fun(outcome)
@@ -211,12 +211,12 @@ operation_factory.default <- function(self, op) return(NULL)
 `%+%.RV` <- function(self, other){
   check_same_probSpace(self, other)
   if (is_scalar(other)){
-    return(apply.RV(self, function(x) x + other))
+    return(Apply.RV(self, function(x) x + other))
   } else if (inherits(other, "RV")){
     func <- function(x){
       x + other$fun(draw(other$probSpace))
     }
-    return(apply.RV(self, func))
+    return(Apply.RV(self, func))
   } else 
     warning("NotImplemented")
 }
@@ -228,12 +228,12 @@ operation_factory.default <- function(self, op) return(NULL)
 `%-%.RV` <- function(self, other){
   check_same_probSpace(self, other)
   if (is_scalar(other)){
-    return(apply.RV(self, function(x) x - other))
+    return(Apply.RV(self, function(x) x - other))
   } else if (inherits(other, "RV")){
     func <- function(x){
       x - other$fun(draw(other$probSpace))
     }
-    return(apply.RV(self, func))
+    return(Apply.RV(self, func))
   } else 
     warning("NotImplemented")
 }
