@@ -118,6 +118,39 @@ count_geq.Results <- function(self, value){
   return(length(filter_geq(self, value)$result))
 }
 
+plot.Results <- function(self) 
+  stop(paste("Only simulations of random variables (RV) ",
+             "can be plotted, but you simulated from a ",
+             "probability space. You must first define a RV ",
+             "on your probability space and simulate it. ",
+             "Then call plot() on those simulations."))
+
+mean.Results <- function(self)
+  stop(paste("You can only call mean() on simulations of ",
+             "random variables (RV), but you simulated from ",
+             "a probability space. You must first define ",
+             "a RV on your probability space and simulate it ",
+             "Then call mean() on those simulations."))
+
+Var <- function(self) UseMethod("Var")
+Var.default <- function(self) return(NULL)
+Var.Results <- function(self)
+  stop(paste("You can only call Var() on simulations of ",
+             "random variables (RV), but you simulated from ",
+             "a probability space. You must first define ",
+             "a RV on your probability space and simulate it ",
+             "Then call Var() on those simulations."))
+
+std <- function(self) UseMethod("std")
+std.default <- function(self) return(NULL)
+std.Results <- function(self)
+  stop(paste("You can only call std() on simulations of ",
+             "random variables (RV), but you simulated from ",
+             "a probability space. You must first define ",
+             "a RV on your probability space and simulate it ",
+             "Then call std() on those simulations."))
+
+
 #---------------------------------------------------------
 #             RVResults Class
 #---------------------------------------------------------
@@ -130,8 +163,10 @@ RVResults <- function(results){
 
 plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
                             jitter=FALSE, bins=NULL, add = FALSE){
-  i <- 0
+  
   dim <- get_dimesion(self)
+  
+  # If RVResults is vector
   if (dim == 0){
     heights <- as.vector(tabulate(self))
     discrete <- is_discrete(heights)
@@ -166,8 +201,8 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
     else if (is.element("impulse", type)){
       x <- as.double(names(tabulate(self)))
       y <- as.vector(tabulate(self))
-      print("Here")
-      print(y)
+      #print("Here")
+      #print(y)
       
       if (identical(alpha, NULL)) 
         alpha <- 0.7
@@ -178,8 +213,8 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
         noise <- runif(1, -a, a)
         x <- x + noise
       }
-      print(a)
-      print(x)
+      #print(a)
+      print(y)
       
       # plot the impulses
       vlines(x, y, color, alpha, normalize, add)
@@ -190,5 +225,32 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
         
     }
   }
+}
+
+mean.RVResults <- function(self){
+ if (get_dimesion(x) == 0){
+   return(mean(self$results))
+ } else if (get_dimesion(x) > 0){
+   return(apply(self$results, 1, mean))
+ } else 
+   stop("I don't know how to take the mean of these values.")
+}
+
+Var.RVResults <- function(self){
+  if (get_dimesion(x) == 0){
+    return(var(self$results))
+  } else if (get_dimesion(x) > 0){
+    return(apply(self$results, 1, var))
+  } else 
+    stop("I don't know how to take the variance of these values.")
+}
+
+std.RVResults <- function(self){
+  if (get_dimesion(x) == 0){
+    return(sd(self$results))
+  } else if (get_dimesion(x) > 0){
+    return(apply(self$results, 1, sd))
+  } else 
+    stop("I don't know how to take the standard deviation of these values.")
 }
 

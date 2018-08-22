@@ -39,4 +39,23 @@ Binomial <- function(n, p){
 draw.Binomial <- function(self)
   return(rbinom(1, self$n, self$p))
 
+DiscreteUniform <- function(self, a = 0, b = 1){
+  # Defines a probability space for a discrete uniform distribution.
+  # 
+  # Attributes:
+  #   a (int): lower bound for possible values
+  # b (int): upper bound for possible values
+  
+  if (a >= b)
+    stop("b cannot be less than or equal to a")
+  
+  me <- list(a = a,
+             b = b,
+             xlim = c(a,b))
+  class(me) <- list.append(class(me), "DiscreteUniform", "Distribution", 
+                           "ProbabilitySpace")
+  return(me)
+}
 
+draw.DiscreteUniform <- function(self)
+  return(sample(self$a : self$b, 1))
