@@ -1,0 +1,15 @@
+Package: symbulate
+Title: A symbolic algebra for specifying simulations.
+Version: 0.0.0.9000
+Authors@R: person("Kien", "Nguyen", email = "luckien20006@gmail.com", role = c("aut", "cre"))
+Description: Symbulate is a package which provides a user friendly framework for conducting simulations involving probability models. The syntax of Symbulate mirrors the "language of probability" and makes it intuitive to specify, run, analyze, and visualize the results of a simulation.
+Depends: R (>= 3.4.3)
+License: Dennis Sun, Kevin Ross
+Encoding: UTF-8
+LazyData: true
+Imports:
+		rlist,
+		plyr,
+		magrittr,
+		stats
+RoxygenNote: 6.1.0
