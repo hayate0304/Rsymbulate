@@ -24,12 +24,15 @@ Results <- function(results){
 # }
 
 #' @export
-Apply <- function(self, fun) UseMethod("Apply")
+Apply <- function(self, fun, ...) UseMethod("Apply")
 #' @export
-Apply.default <- function(self, fun) return(NULL)
+Apply.default <- function(self, fun, ...) return(NULL)
 #' @export
-Apply.Results <- function(self, fun){
-  return(Results(apply(self$results, 1, fun)))
+Apply.Results <- function(self, fun, ...){
+  if (get_dimesion(self) == 0){
+    return(Results(sapply(self$results, fun, ...)))
+  } else
+    return(Results(apply(self$results, 1, fun, ...)))
 }
 
 #' @export
@@ -39,11 +42,18 @@ tabulate.default <- function(self, normalize = FALSE) return(NULL)
 
 #' @export
 tabulate.Results <- function(self, normalize = FALSE){
-  if (normalize) {
-    return(round(table(self$results) / length(self$results), 5))
-  } else
-    return(round(table(self$results), 5))
+  df <- plyr::count(as.data.frame(self$results), vars = names(df))
 
+  if (ncol(df) == 2)
+    names(df) <- c("Outcome", "Value")
+  if (normalize) {
+    df$Value <- round(df$freq / nrow(df), 5)
+    df$freq <- NULL
+    print(df, row.names = F)
+    invisible(df)
+  } else
+    print(df, row.names = F)
+    invisible(df)
 }
 
 #------------------
