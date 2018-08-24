@@ -42,26 +42,34 @@ tabulate.default <- function(self, normalize = FALSE) return(NULL)
 
 #' @export
 tabulate.Results <- function(self, normalize = FALSE){
-  df <- plyr::count(as.data.frame(self$results), vars = names(df))
+  df <- plyr::count(as.data.frame(self$results))
 
   if (ncol(df) == 2)
     names(df) <- c("Outcome", "Value")
   if (normalize) {
-    df$Value <- round(df$freq / nrow(df), 5)
-    df$freq <- NULL
-    print(df, row.names = F)
-    invisible(df)
-  } else
-    print(df, row.names = F)
-    invisible(df)
+    #print(df)
+    if (ncol(df) == 2){
+      df$Value <- round(df$Value / sum(df$Value), 4)
+      #print(df$Value)
+    } else {
+      df$Value <- round(df$freq / sum(df$freq), 4)
+      df$freq <- NULL
+    }
+  }
+
+  return(df)
 }
 
 #------------------
 # filter family
 #------------------
+
 #' @export
+filter.Results <- function(self, fun){
+  return(Results(self$results[fun(self$results)]))
+}
+
 filter_eq <- function(self, value) UseMethod("filter_eq")
-#' @export
 filter_eq.default <- function(self, value) return(NULL)
 #' @export
 filter_eq.Results <- function(self, value)
@@ -194,15 +202,24 @@ RVResults <- function(results){
   return(me)
 }
 
+plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
+                 jitter=FALSE, bins=NULL, add = FALSE)
+  UseMethod("plot")
+
+# plot.default <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
+#                          jitter=FALSE, bins=NULL, add = FALSE)
+#   return(NULL)
+
 #' @export
 plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
-                            jitter=FALSE, bins=NULL, add = FALSE){
+                           jitter=FALSE, bins=NULL, add = FALSE){
 
   dim <- get_dimesion(self)
 
   # If RVResults is vector
   if (dim == 0){
-    heights <- as.vector(tabulate(self))
+    tb <- tabulate(self)
+    heights <- tb$Value
     discrete <- is_discrete(heights)
     #paste("Dis: ", discrete)
 
@@ -218,23 +235,24 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
       bins <- 30
 
     color <- get_next_color()
+    ylab <- "Count"
 
     #--------------------------------------
     ## if density in type to be implemented
     #--------------------------------------
 
     if (is.element("hist", type) || is.element("bar", type)){
+      if (normalize)
+        ylab = "Density"
+
       hist(self$results, breaks = bins,
-           col = rgb(color(), alpha = alpha),
-           freq = !normalize)
-      if (normalize){
-        title(ylab = "Relative Frequency")
-      } else
-        title(ylab = "Count")
+           col = rgb((t(col2rgb(color)) / 255), alpha = alpha),
+           freq = !normalize, ylab = ylab, xlab = "", main = "")
     }
     else if (is.element("impulse", type)){
-      x <- as.double(names(tabulate(self)))
-      y <- as.vector(tabulate(self))
+      x <- as.double(tb$Outcome)
+      y <- round(tb$Value, 4)
+
       #print("Here")
       #print(y)
 
@@ -247,28 +265,31 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
         noise <- runif(1, -a, a)
         x <- x + noise
       }
-      #print(a)
-      print(y)
+
+      #print(x)
+      #print(y)
+
+      if (normalize)
+        ylab = "Relative Frequency"
 
       # plot the impulses
-      vlines(x, y, color, alpha, normalize, add)
-      if (normalize){
-        title(ylab = "Relative Frequency")
-      } else
-        title(ylab = "Count")
-
+      # graphics::plot(x, y, type="h", col = rgb(color,alpha = alpha),
+      #                ylab = ylab, xlab = "")
+      ggplot(tb, aes(x=Outcome, xend=Outcome, y=0, yend=Value)) +
+        geom_segment(color=color, alpha = alpha) +
+        ylab(ylab)
     }
   }
 }
 
 #' @export
 mean.RVResults <- function(self){
- if (get_dimesion(x) == 0){
-   return(mean(self$results))
- } else if (get_dimesion(x) > 0){
-   return(apply(self$results, 1, mean))
- } else
-   stop("I don't know how to take the mean of these values.")
+  if (get_dimesion(x) == 0){
+    return(mean(self$results))
+  } else if (get_dimesion(x) > 0){
+    return(apply(self$results, 1, mean))
+  } else
+    stop("I don't know how to take the mean of these values.")
 }
 
 #' @export

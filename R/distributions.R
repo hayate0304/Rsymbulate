@@ -63,3 +63,20 @@ DiscreteUniform <- function(self, a = 0, b = 1){
 #' @export
 draw.DiscreteUniform <- function(self)
   return(sample(self$a : self$b, 1))
+
+#' @export
+Uniform <- function(a=0.0, b=1.0){
+  if (a > b)
+    stop("b cannot be less than a")
+
+  me <- list(a = a,
+             b = b,
+             xlim = c(a,b))
+  class(me) <- rlist::list.append(class(me), "Uniform", "Distribution",
+                                  "ProbabilitySpace")
+  return(me)
+}
+
+#' @export
+draw.Uniform <- function(self)
+  return(runif(1, self$a, self$b))

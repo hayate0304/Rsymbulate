@@ -34,7 +34,6 @@ draw.RV <- function(self)
   # Example:
   #   X = RV(Normal(0, 1))
   #   X.draw() might return -0.9, for example.
-
   return(self$fun(draw(self$probSpace)))
 
 #' @export
@@ -62,8 +61,8 @@ call.default <- function(self, input) return(NULL)
 #' @export
 call.RV <- function(self, input){
   cat("Warning: Calling an RV as a function simply applies the function that defines\n
-the RV to the input, regardless of whether the input is a valid outcome in\n
-the underlying probability space.\n")
+      the RV to the input, regardless of whether the input is a valid outcome in\n
+      the underlying probability space.\n")
 
   dummy_draw = draw(self$probSpace)
   #
@@ -99,7 +98,7 @@ the underlying probability space.\n")
                  a(n) ", typeof(input), "."))
 
   }
-}
+  }
 
 check_same_probSpace.RV <- function(self, other){
   if (is_scalar(other)){
@@ -159,10 +158,10 @@ abs.RV <- function(self){
 `%+%.RV` <- function(self, other){
   check_same_probSpace(self, other)
   if (is_scalar(other)){
-    return(Apply.RV(self, function(x) x + other))
+    return(Apply.RV(self, function(x) self$fun(x) + other))
   } else if (inherits(other, "RV")){
     func <- function(x){
-      x + other$fun(draw(other$probSpace))
+      self$fun(x) + other$fun(draw(other$probSpace))
     }
     return(Apply.RV(self, func))
   } else
@@ -170,19 +169,32 @@ abs.RV <- function(self){
 }
 
 #' @export
+`%+%` <- function(scalar, rv){
+  #return(-1 * (`%-%.RV`(rv, scalar)))
+  return(Apply.RV(rv, function(x) `+`(scalar, rv$fun(x))))
+}
+
 `%-%` <- function(self, other) UseMethod("%-%")
-#' @export
 `%-%.default` <- function(self, other) return(NULL)
+
+#' @export
+`%-%` <- function(scalar, rv){
+  #return(-1 * (`%-%.RV`(rv, scalar)))
+  return(Apply.RV(rv, function(x) `-`(scalar, rv$fun(x))))
+}
+
 #' @export
 `%-%.RV` <- function(self, other){
   check_same_probSpace(self, other)
-  if (is_scalar(other)){
-    return(Apply.RV(self, function(x) x - other))
-  } else if (inherits(other, "RV")){
-    func <- function(x){
-      x - other$fun(draw(other$probSpace))
-    }
-    return(Apply.RV(self, func))
-  } else
-    warning("NotImplemented")
+
+  if (inherits(self, "RV"))
+    if (is_scalar(other)){
+      return(Apply.RV(self, function(x) self$fun(x) - other))
+    } else if (inherits(other, "RV")){
+      func <- function(x){
+        self$fun(x) - other$fun(draw(other$probSpace))
+      }
+      return(Apply.RV(self, func))
+    } else
+      warning("NotImplemented")
 }
