@@ -33,7 +33,7 @@ Binomial <- function(n, p){
   me <- list(n = self.n,
              p = self.p)
   class(me) <- rlist::list.append(class(me), "Binomial", "Distribution",
-                           "ProbabilitySpace")
+                                  "ProbabilitySpace")
   return(me)
 }
 
@@ -56,7 +56,7 @@ DiscreteUniform <- function(self, a = 0, b = 1){
              b = b,
              xlim = c(a,b))
   class(me) <- rlist::list.append(class(me), "DiscreteUniform", "Distribution",
-                           "ProbabilitySpace")
+                                  "ProbabilitySpace")
   return(me)
 }
 
@@ -80,3 +80,33 @@ Uniform <- function(a=0.0, b=1.0){
 #' @export
 draw.Uniform <- function(self)
   return(runif(1, self$a, self$b))
+
+#' @export
+Normal <- function(mean=0.0, sd=1.0, var=NULL){
+  if (identical(var, NULL)){
+    if (sd > 0){
+      scale = sd
+    } else if (sd == 0){
+      stop("NotImplementedError")
+    } else
+      stop("sd cannot be less than 0")
+  } else {
+    if (var > 0){
+      scale = sqrt(var)
+    } else if (var == 0){
+      stop("NotImplementedError")
+    } else
+      stop("var cannot be less than 0")
+  }
+
+  me <- list(mean = mean,
+             scale = scale)
+  class(me) <- rlist::list.append(class(me), "Normal", "Distribution",
+                                  "ProbabilitySpace")
+  return(me)
+}
+
+#' @export
+draw.Normal <- function(self)
+  return(rnorm(1, self$mean, self$scale))
+

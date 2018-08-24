@@ -212,7 +212,7 @@ plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
 
 #' @export
 plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
-                           jitter=FALSE, bins=NULL, add = FALSE){
+                            jitter=FALSE, bins=NULL, add = FALSE){
 
   dim <- get_dimesion(self)
 
@@ -284,12 +284,12 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
 
 #' @export
 mean.RVResults <- function(self){
-  if (get_dimesion(x) == 0){
-    return(mean(self$results))
-  } else if (get_dimesion(x) > 0){
-    return(apply(self$results, 1, mean))
-  } else
-    stop("I don't know how to take the mean of these values.")
+ if (get_dimesion(x) == 0){
+   return(mean(self$results))
+ } else if (get_dimesion(x) > 0){
+   return(apply(self$results, 1, mean))
+ } else
+   stop("I don't know how to take the mean of these values.")
 }
 
 #' @export

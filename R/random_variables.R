@@ -61,8 +61,8 @@ call.default <- function(self, input) return(NULL)
 #' @export
 call.RV <- function(self, input){
   cat("Warning: Calling an RV as a function simply applies the function that defines\n
-      the RV to the input, regardless of whether the input is a valid outcome in\n
-      the underlying probability space.\n")
+the RV to the input, regardless of whether the input is a valid outcome in\n
+the underlying probability space.\n")
 
   dummy_draw = draw(self$probSpace)
   #
@@ -98,7 +98,7 @@ call.RV <- function(self, input){
                  a(n) ", typeof(input), "."))
 
   }
-  }
+}
 
 check_same_probSpace.RV <- function(self, other){
   if (is_scalar(other)){
