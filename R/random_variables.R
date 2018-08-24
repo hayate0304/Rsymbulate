@@ -53,7 +53,7 @@ sim.RV <- function(self, n){
     return(RVResults(t(replicate(n, draw(self)))))
 }
 
-#'
+#' @export
 call <- function(self, input) UseMethod("call")
 #' @export
 call.default <- function(self, input) return(NULL)

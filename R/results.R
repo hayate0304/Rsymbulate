@@ -69,42 +69,49 @@ filter.Results <- function(self, fun){
   return(Results(self$results[fun(self$results)]))
 }
 
+#' @export
 filter_eq <- function(self, value) UseMethod("filter_eq")
+#' @export
 filter_eq.default <- function(self, value) return(NULL)
 #' @export
 filter_eq.Results <- function(self, value)
   return(Results(self$results[self$results == value]))
 
-
+#' @export
 filter_neq <- function(self, value) UseMethod("filter_neq")
+#' @export
 filter_neq.default <- function(self, value) return(NULL)
 #' @export
 filter_neq.Results <- function(self, value)
   return(Results(self$results[self$results != value]))
 
-
+#' @export
 filter_lt <- function(self, value) UseMethod("filter_lt")
+#' @export
 filter_lt.default <- function(self, value) return(NULL)
 #' @export
 filter_lt.Results <- function(self, value)
   return(Results(self$results[self$results < value]))
 
-
+#' @export
 filter_leq <- function(self, value) UseMethod("filter_leq")
+#' @export
 filter_leq.default <- function(self, value) return(NULL)
 #' @export
 filter_leq.Results <- function(self, value)
   return(Results(self$results[self$results <= value]))
 
-
+#' @export
 filter_gt <- function(self, value) UseMethod("filter_gt")
+#' @export
 filter_gt.default <- function(self, value) return(NULL)
 #' @export
 filter_gt.Results <- function(self, value)
   return(Results(self$results[self$results > value]))
 
-
+#' @export
 filter_geq <- function(self, value) UseMethod("filter_geq")
+#' @export
 filter_geq.default <- function(self, value) return(NULL)
 #' @export
 filter_geq.Results <- function(self, value)
@@ -113,42 +120,54 @@ filter_geq.Results <- function(self, value)
 #------------------
 # count family
 #------------------
+#' @export
 count_eq <- function(self, value) UseMethod("count_eq")
+#' @export
 count_eq.default <- function(self, value) return(NULL)
 #' @export
 count_eq.Results <- function(self, value){
   return(length(filter_eq(self, value)$result))
 }
 
+#' @export
 count_neq <- function(self, value) UseMethod("count_neq")
+#' @export
 count_neq.default <- function(self, value) return(NULL)
 #' @export
 count_neq.Results <- function(self, value){
   return(length(filter_neq(self, value)$result))
 }
 
+#' @export
 count_lt <- function(self, value) UseMethod("count_lt")
+#' @export
 count_lt.default <- function(self, value) return(NULL)
 #' @export
 count_lt.Results <- function(self, value){
   return(length(filter_lt(self, value)$result))
 }
 
+#' @export
 count_leq <- function(self, value) UseMethod("count_leq")
+#' @export
 count_leq.default <- function(self, value) return(NULL)
 #' @export
 count_leq.Results <- function(self, value){
   return(length(filter_leq(self, value)$result))
 }
 
+#' @export
 count_gt <- function(self, value) UseMethod("count_gt")
+#' @export
 count_gt.default <- function(self, value) return(NULL)
 #' @export
 count_gt.Results <- function(self, value){
   return(length(filter_gt(self, value)$result))
 }
 
+#' @export
 count_geq <- function(self, value) UseMethod("count_geq")
+#' @export
 count_geq.default <- function(self, value) return(NULL)
 #' @export
 count_geq.Results <- function(self, value){
@@ -170,7 +189,9 @@ mean.Results <- function(self)
              "a RV on your probability space and simulate it ",
              "Then call mean() on those simulations."))
 
+#' @export
 Var <- function(self) UseMethod("Var")
+#' @export
 Var.default <- function(self) return(NULL)
 #' @export
 Var.Results <- function(self)
@@ -180,7 +201,9 @@ Var.Results <- function(self)
              "a RV on your probability space and simulate it ",
              "Then call Var() on those simulations."))
 
+#' @export
 std <- function(self) UseMethod("std")
+#' @export
 std.default <- function(self) return(NULL)
 #' @export
 std.Results <- function(self)
@@ -202,6 +225,7 @@ RVResults <- function(results){
   return(me)
 }
 
+#' @export
 plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
                  jitter=FALSE, bins=NULL, add = FALSE)
   UseMethod("plot")
