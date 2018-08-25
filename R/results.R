@@ -225,14 +225,13 @@ RVResults <- function(results){
   return(me)
 }
 
-#' @export
-plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
-                 jitter=FALSE, bins=NULL, add = FALSE)
-  UseMethod("plot")
-
+# plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
+#                  jitter=FALSE, bins=NULL, add = FALSE)
+#   UseMethod("plot")
+#
 # plot.default <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
 #                          jitter=FALSE, bins=NULL, add = FALSE)
-#   return(NULL)
+#   stop("Not implemented")
 
 #' @export
 plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
@@ -245,21 +244,22 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
     tb <- tabulate(self)
     heights <- tb$Value
     discrete <- is_discrete(heights)
-    #paste("Dis: ", discrete)
+    #print(paste("Dis: ", discrete))
 
     if (identical(type, NULL)){
       if (discrete){
-        type <- "impulse"
+        type <- c(type, "impulse")
       } else
-        type <- "hist"
+        type <- c(type, "hist")
     }
     if (identical(alpha, NULL))
-      alpha <- 0.5
+      alpha <- 0.45
     if (identical(bins, NULL))
       bins <- 30
 
     color <- get_next_color()
     ylab <- "Count"
+    tb <- tabulate(self, normalize = normalize)
 
     #--------------------------------------
     ## if density in type to be implemented
@@ -269,9 +269,20 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
       if (normalize)
         ylab = "Density"
 
-      hist(self$results, breaks = bins,
-           col = rgb((t(col2rgb(color)) / 255), alpha = alpha),
-           freq = !normalize, ylab = ylab, xlab = "", main = "")
+      if (identical(type, c("hist", "impulse"))){
+        ggplot2::ggplot(tb, aes(Outcome, Value)) +
+          geom_bar(stat="identity", fill = color(), , alpha = alpha) +
+          labs(y=ylab, x="")
+      } else {
+        if (normalize)
+          hist <- geom_histogram(bins = bins, fill = color(), aes(y=..density..), alpha = alpha)
+        else
+          hist <- geom_histogram(bins = bins, fill = color(), , alpha = alpha)
+
+        ggplot2::ggplot() + aes(self$results) +
+          hist +
+          labs(y=ylab, x="")
+      }
     }
     else if (is.element("impulse", type)){
       x <- as.double(tb$Outcome)
@@ -299,9 +310,45 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
       # plot the impulses
       # graphics::plot(x, y, type="h", col = rgb(color,alpha = alpha),
       #                ylab = ylab, xlab = "")
-      ggplot(tb, aes(x=Outcome, xend=Outcome, y=0, yend=Value)) +
-        geom_segment(color=color, alpha = alpha) +
+      ggplot2::ggplot(tb, aes(x=Outcome, xend=Outcome, y=0, yend=Value)) +
+        ggplot2::geom_segment(color=color(), alpha = alpha) +
         ylab(ylab)
+    }
+  } else if (dim == 2){
+    x <- self$results[,1]
+    y <- self$results[,2]
+#
+#     print(x)
+#     print(y)
+    x_height <- as.vector(table(self$results[,1]))
+    y_height <- as.vector(table(self$results[,2]))
+    discrete_x <- is_discrete(x_height)
+    discrete_y <- is_discrete(y_height)
+
+    if (identical(type, NULL))
+      type <- c(type, "scatter")
+    if (identical(alpha, NULL))
+      alpha = 0.4
+    if (identical(bins, NULL))
+      if (is.element("tile", type)){
+        bins = 10
+      } else
+        bins = 30
+
+    if (is.element("marginal", type)){
+      warning("To be implemeted")
+    } else
+      color <- get_next_color()
+
+    if (is.element("scatter", type)){
+      if (jitter){
+        x <- x + rnorm(length(x), 0, .01 * (max(x) - min(x)))
+        y <- y + rnorm(length(y), 0, .01 * (max(y) - min(y)))
+      }
+
+      ggplot2::ggplot(, aes(x=x, y=y)) +
+        geom_point(size=2, color = color(), alpha = alpha) +
+        labs(y="", x="")
     }
   }
 }

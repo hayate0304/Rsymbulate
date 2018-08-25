@@ -25,27 +25,27 @@ RV <- function(probSpace, fun = function(x) x){
   return(me)
 }
 
+# A function that takes no arguments and returns a single
+#   realization of the random variable.
+#
+# Example:
+#   X = RV(Normal(0, 1))
+#   X.draw() might return -0.9, for example.
 #' @export
 draw.RV <- function(self)
-
-  # A function that takes no arguments and returns a single
-  #   realization of the random variable.
-  #
-  # Example:
-  #   X = RV(Normal(0, 1))
-  #   X.draw() might return -0.9, for example.
   return(self$fun(draw(self$probSpace)))
 
+
+#   Simulate n draws from probability space described by the random
+#   variable.
+#
+# Args:
+#   n (int): How many draws to make.
+#
+# Returns:
+#   Results: A list-like object containing the simulation results.
 #' @export
 sim.RV <- function(self, n){
-  #   Simulate n draws from probability space described by the random
-  #   variable.
-  #
-  # Args:
-  #   n (int): How many draws to make.
-  #
-  # Returns:
-  #   Results: A list-like object containing the simulation results.
 
   if (length(draw(self)) == 1){
     return(RVResults(replicate(n, draw(self))))
@@ -169,7 +169,7 @@ abs.RV <- function(self){
 }
 
 #' @export
-`%+%` <- function(scalar, rv){
+`%+%.numeric` <- function(scalar, rv){
   #return(-1 * (`%-%.RV`(rv, scalar)))
   return(Apply.RV(rv, function(x) `+`(scalar, rv$fun(x))))
 }
@@ -178,7 +178,7 @@ abs.RV <- function(self){
 `%-%.default` <- function(self, other) return(NULL)
 
 #' @export
-`%-%` <- function(scalar, rv){
+`%-%.numeric` <- function(scalar, rv){
   #return(-1 * (`%-%.RV`(rv, scalar)))
   return(Apply.RV(rv, function(x) `-`(scalar, rv$fun(x))))
 }
@@ -197,4 +197,39 @@ abs.RV <- function(self){
       return(Apply.RV(self, func))
     } else
       warning("NotImplemented")
+}
+
+#' @export
+`%*%.RV` <- function(self, other){
+  check_same_probSpace(self, other)
+  if (is_scalar(other)){
+    return(Apply.RV(self, function(x) self$fun(x) * other))
+  } else if (inherits(other, "RV")){
+    func <- function(x){
+      self$fun(x) + other$fun(draw(other$probSpace))
+    }
+    return(Apply.RV(self, func))
+  } else
+    warning("NotImplemented")
+}
+
+#' @export
+`%*%.numeric` <- function(scalar, rv){
+  #return(-1 * (`%-%.RV`(rv, scalar)))
+  return(Apply.RV(rv, function(x) `*`(scalar, rv$fun(x))))
+}
+
+#' @export
+`%&%.RV` <- function(self, other){
+  check_same_probSpace(self, other)
+
+  if (inherits(other, "RV")){
+    fun <- function(outcome) {
+      a <- self$fun(outcome)
+      b <- other$fun(outcome)
+      return(c(a, b))
+    }
+    return(RV(self$probSpace, fun))
+  } else
+    stop("Joint distributions are only defined for RVs.")
 }

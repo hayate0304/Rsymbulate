@@ -25,7 +25,7 @@ ProbabilitySpace <- function(drawFunc){
 #' @export
 draw <- function(self)  UseMethod("draw")
 #' @export
-draw.default <- function(self)  return(NULL)
+draw.default <- function(self)  stop("Could not perform the function on this object")
 
 #' @export
 draw.ProbabilitySpace <- function(self){
@@ -98,13 +98,13 @@ check_same.ProbabilitySpace <- function(self, other){
     }
   } else {
     dr <- function(){
-      # Another way to store this is using list
-      # tuple = list()
-      # for (i in 1:exponent){
-      #   tuple = rlist::list.append(tuple, draw(self))
-      # }
+      # Using list
+      tuple = list()
+      for (i in 1:exponent){
+        tuple = rlist::list.append(tuple, draw(self))
+      }
 
-      return(t(replicate(exponent, draw(self))))
+      return(tuple)
     }
   }
   return(ProbabilitySpace(dr))
@@ -239,7 +239,7 @@ check_same_probSpace.Event <- function(self, other){
 #' @export
 `%&%` <- function(self, other) UseMethod("%&%")
 #' @export
-`%&%.default` <- function(self, other) return(NULL)
+`%&%.default` <- function(self, other) stop("Could not perform the operation")
 
 # define the event (A & B)
 #' @export

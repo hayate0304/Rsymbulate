@@ -11,5 +11,6 @@ Imports:
 		rlist,
 		plyr,
 		magrittr,
-		stats
+		stats,
+		ggplot2
 RoxygenNote: 6.1.0
