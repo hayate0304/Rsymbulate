@@ -225,13 +225,14 @@ RVResults <- function(results){
   return(me)
 }
 
-# plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
-#                  jitter=FALSE, bins=NULL, add = FALSE)
-#   UseMethod("plot")
-#
-# plot.default <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
-#                          jitter=FALSE, bins=NULL, add = FALSE)
-#   stop("Not implemented")
+#' @export
+plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
+                 jitter=FALSE, bins=NULL, add = FALSE)
+  UseMethod("plot")
+#' @export
+plot.default <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
+                         jitter=FALSE, bins=NULL, add = FALSE)
+  stop("Not implemented")
 
 #' @export
 plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
@@ -355,7 +356,7 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
 
 #' @export
 mean.RVResults <- function(self){
- if (get_dimesion(x) == 0){
+ if (get_dimesion(self) == 0){
    return(mean(self$results))
  } else if (get_dimesion(x) > 0){
    return(apply(self$results, 1, mean))
@@ -365,7 +366,7 @@ mean.RVResults <- function(self){
 
 #' @export
 Var.RVResults <- function(self){
-  if (get_dimesion(x) == 0){
+  if (get_dimesion(self) == 0){
     return(var(self$results))
   } else if (get_dimesion(x) > 0){
     return(apply(self$results, 1, var))
@@ -375,7 +376,7 @@ Var.RVResults <- function(self){
 
 #' @export
 std.RVResults <- function(self){
-  if (get_dimesion(x) == 0){
+  if (get_dimesion(self) == 0){
     return(sd(self$results))
   } else if (get_dimesion(x) > 0){
     return(apply(self$results, 1, sd))
