@@ -5,15 +5,15 @@
 #' Defines a random variable.
 #'  A random variable is a function which maps an outcome of
 #'  a probability space to a number.  Simulating a random
-#'  variable is a two-step process: first, a draw is taken
+#'  variable is a two-step process: first, a Draw is taken
 #'  from the underlying probability space; then, the function
-#'  is applied to that draw to obtain the realized value of
+#'  is applied to that Draw to obtain the realized value of
 #'  the random variable.
 #' @param probSpace (ProbabilitySpace): the underlying
 #' probability space of the random variable.
 #' @param fun (function, optional)
 #' @examples
-#' A single draw is a sequence of 0s and 1s
+#' A single Draw is a sequence of 0s and 1s
 #' , e.g., (0, 0, 1, 0, 1). P = BoxModel([0, 1], size=5)
 #' @return A RV
 #' @export
@@ -30,10 +30,12 @@ RV <- function(probSpace, fun = function(x) x){
 #
 # Example:
 #   X = RV(Normal(0, 1))
-#   X.draw() might return -0.9, for example.
+#   X.Draw() might return -0.9, for example.
 #' @export
-draw.RV <- function(self)
-  return(self$fun(draw(self$probSpace)))
+Draw.RV <- function(self){
+  return(self$fun(Draw(self$probSpace)))
+}
+  
 
 
 #   Simulate n draws from probability space described by the random
@@ -45,26 +47,26 @@ draw.RV <- function(self)
 # Returns:
 #   Results: A list-like object containing the simulation results.
 #' @export
-sim.RV <- function(self, n){
+Sim.RV <- function(self, n){
 
-  if (length(draw(self)) == 1){
-    return(RVResults(replicate(n, draw(self))))
+  if (length(Draw(self)) == 1){
+    return(RVResults(replicate(n, Draw(self))))
   } else
-    return(RVResults(t(replicate(n, draw(self)))))
+    return(RVResults(t(replicate(n, Draw(self)))))
 }
 
 #' @export
-call <- function(self, input) UseMethod("call")
+Call <- function(self, input) UseMethod("call")
 #' @export
-call.default <- function(self, input) return(NULL)
+Call.default <- function(self, input) return(NULL)
 
 #' @export
-call.RV <- function(self, input){
-  cat("Warning: Calling an RV as a function simply applies the function that defines\n
-the RV to the input, regardless of whether the input is a valid outcome in\n
+Call.RV <- function(self, input){
+  cat("Warning: Calling an RV as a function simply applies the function that defines
+the RV to the input, regardless of whether the input is a valid outcome in
 the underlying probability space.\n")
 
-  dummy_draw = draw(self$probSpace)
+  dummy_draw = Draw(self$probSpace)
   #
   #paste("Dummy: ", dummy_draw)
 
@@ -129,10 +131,10 @@ Apply.RV <- function(self, func){
   #   return log(x ** 2)
   # Y = X.Apply(g)
 
-  # f_new <- function(outcome)
-  #   return(func(self$fun(outcome)))
+  f_new <- function(outcome)
+    return(func(self$fun(outcome)))
 
-  return(RV(self$probSpace, func))
+  return(RV(self$probSpace, f_new))
 }
 
 #-----------------------------------------
@@ -141,7 +143,7 @@ Apply.RV <- function(self, func){
 
 # e.g., abs(X)
 #' @export
-abs.RV <- function(self){
+Abs.RV <- function(self){
   return(Apply.RV(self, function(x) abs(x)))
 }
 
@@ -161,7 +163,7 @@ abs.RV <- function(self){
     return(Apply.RV(self, function(x) self$fun(x) + other))
   } else if (inherits(other, "RV")){
     func <- function(x){
-      self$fun(x) + other$fun(draw(other$probSpace))
+      self$fun(x) + other$fun(Draw(other$probSpace))
     }
     return(Apply.RV(self, func))
   } else
@@ -192,7 +194,7 @@ abs.RV <- function(self){
       return(Apply.RV(self, function(x) self$fun(x) - other))
     } else if (inherits(other, "RV")){
       func <- function(x){
-        self$fun(x) - other$fun(draw(other$probSpace))
+        self$fun(x) - other$fun(Draw(other$probSpace))
       }
       return(Apply.RV(self, func))
     } else
@@ -206,7 +208,7 @@ abs.RV <- function(self){
     return(Apply.RV(self, function(x) self$fun(x) * other))
   } else if (inherits(other, "RV")){
     func <- function(x){
-      self$fun(x) + other$fun(draw(other$probSpace))
+      self$fun(x) + other$fun(Draw(other$probSpace))
     }
     return(Apply.RV(self, func))
   } else

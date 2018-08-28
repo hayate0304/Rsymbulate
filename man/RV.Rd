@@ -5,9 +5,9 @@
 \title{Defines a random variable.
  A random variable is a function which maps an outcome of
  a probability space to a number.  Simulating a random
- variable is a two-step process: first, a draw is taken
+ variable is a two-step process: first, a Draw is taken
  from the underlying probability space; then, the function
- is applied to that draw to obtain the realized value of
+ is applied to that Draw to obtain the realized value of
  the random variable.}
 \usage{
 RV(probSpace, fun = function(x) x)
@@ -25,12 +25,12 @@ A RV
 Defines a random variable.
  A random variable is a function which maps an outcome of
  a probability space to a number.  Simulating a random
- variable is a two-step process: first, a draw is taken
+ variable is a two-step process: first, a Draw is taken
  from the underlying probability space; then, the function
- is applied to that draw to obtain the realized value of
+ is applied to that Draw to obtain the realized value of
  the random variable.
 }
 \examples{
-A single draw is a sequence of 0s and 1s
+A single Draw is a sequence of 0s and 1s
 , e.g., (0, 0, 1, 0, 1). P = BoxModel([0, 1], size=5)
 }

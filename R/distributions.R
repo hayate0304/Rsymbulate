@@ -38,7 +38,7 @@ Binomial <- function(n, p){
 }
 
 #' @export
-draw.Binomial <- function(self)
+Draw.Binomial <- function(self)
   return(rbinom(1, self$n, self$p))
 
 #' @export
@@ -61,7 +61,7 @@ DiscreteUniform <- function(self, a = 0, b = 1){
 }
 
 #' @export
-draw.DiscreteUniform <- function(self)
+Draw.DiscreteUniform <- function(self)
   return(sample(self$a : self$b, 1))
 
 #' @export
@@ -78,7 +78,7 @@ Uniform <- function(a=0.0, b=1.0){
 }
 
 #' @export
-draw.Uniform <- function(self)
+Draw.Uniform <- function(self)
   return(runif(1, self$a, self$b))
 
 #' @export
@@ -107,6 +107,6 @@ Normal <- function(mean=0.0, sd=1.0, var=NULL){
 }
 
 #' @export
-draw.Normal <- function(self)
+Draw.Normal <- function(self)
   return(rnorm(1, self$mean, self$scale))
 

@@ -9,12 +9,12 @@
 
 #' Defines a probability space.
 #'
-#' @param draw function
+#' @param Draw function
 #' @return ProbabilitySpace
 #' @export
-ProbabilitySpace <- function(drawFunc){
+ProbabilitySpace <- function(DrawFunc){
   me <- list(
-    draw = drawFunc
+    Draw = DrawFunc
   )
 
   # Set name of the class
@@ -23,31 +23,31 @@ ProbabilitySpace <- function(drawFunc){
 }
 
 #' @export
-draw <- function(self)  UseMethod("draw")
+Draw <- function(self)  UseMethod("Draw")
 #' @export
-draw.default <- function(self)  stop("Could not perform the function on this object")
+Draw.default <- function(self)  stop("Could not perform the function on this object")
 
 #' @export
-draw.ProbabilitySpace <- function(self){
+Draw.ProbabilitySpace <- function(self){
 #  print("In PS")
-  return(self$draw())
+  return(self$Draw())
 }
 
 #' @export
-sim <- function(self, n)  UseMethod("sim")
+Sim <- function(self, n)  UseMethod("Sim")
 #' @export
-sim.default <- function(self, n)  return(NULL)
+Sim.default <- function(self, n)  return(NULL)
 
-#' Simulate n draws from probability space.
+#' Simulate n Draws from probability space.
 #'
-#' @param n (int): How many draws to make.
-#' @return A vector containing the simulation results.
+#' @param n (int): How many Draws to make.
+#' @return A vector containing the Simulation results.
 #' @export
-sim.ProbabilitySpace <- function(self, n){
-  if (length(draw(self)) == 1){
-    return(Results(replicate(n, draw(self))))
+Sim.ProbabilitySpace <- function(self, n){
+  if (length(Draw(self)) == 1){
+    return(Results(replicate(n, Draw(self))))
   } else
-    return(Results(t(replicate(n, draw(self)))))
+    return(Results(t(replicate(n, Draw(self)))))
 }
 
 check_same <- function(self, other)  UseMethod("check_same")
@@ -69,43 +69,39 @@ check_same.ProbabilitySpace <- function(self, other){
 `%*%.ProbabilitySpace` <- function(self, other){
 
   # Create function "dr" to pass to ProbabilitySpace. If I change this function's name
-  # to "draw" then R will be aborted since the function's name mess up with the method
-  # "draw" in BoxModel.
+  # to "Draw" then R will be aborted since the function's name mess up with the method
+  # "Draw" in BoxModel.
   dr <- function(){
-    return(c(draw(self), draw(other)))
+    return(c(Draw(self), Draw(other)))
   }
   return(ProbabilitySpace(dr))
 }
 
 #' @export
-`%**%` <- function(self, exponent)  UseMethod("%**%")
+`%^%` <- function(self, exponent)  UseMethod("%^%")
 #' @export
-`%**%.default` <- function(self, exponent)  return(NULL)
+`%^%.default` <- function(self, exponent)  return(NULL)
 
 #' @export
-`%**%.ProbabilitySpace` <- function(self, exponent){
+`%^%.ProbabilitySpace` <- function(self, exponent){
   if (is.infinite(exponent)){
     dr <- function(){
       seed <- get_seed()
 
       x <- function(n){
         set.seed(seed)
-        replicate(as.integer(n), draw(self))
+        replicate(as.integer(n), Draw(self))
 
-        return(draw(self))
+        return(Draw(self))
       }
       return(InfiniteSequence(x))
     }
   } else {
-    dr <- function(){
-      # Using list
-      tuple = list()
-      for (i in 1:exponent){
-        tuple = rlist::list.append(tuple, draw(self))
-      }
 
-      return(tuple)
+    dr <- function(){
+      return(replicate(exponent, Draw(self)))
     }
+    
   }
   return(ProbabilitySpace(dr))
 }
@@ -115,7 +111,7 @@ check_same.ProbabilitySpace <- function(self, other){
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ArbitrarySpace <- function(){
   me <- list(
-    draw = function() 1
+    Draw = function() 1
   )
 
   # Add name for the class
@@ -163,37 +159,37 @@ BoxModel <- function(box, size = 1, replace = TRUE,
 }
 
 #' @export
-draw.BoxModel <- function(self){
+Draw.BoxModel <- function(self){
 
-  draw_inds <- function(size){
+  Draw_inds <- function(size){
     return(sample(length(self$box), size, self$replace, self$prob))
   }
 
   if (self$size == 1){
-    return(self$box[draw_inds(1)])
+    return(self$box[Draw_inds(1)])
   } else if (is.infinite(self$size)) {
 #    warning("BoxModel with size = Inf will be implemented later")
 
     if (self$replace == FALSE)
-      stop("Cannot draw an infinite number of tickets
+      stop("Cannot Draw an infinite number of tickets
            without replacement")
 
     seed <- get_seed()
 
     x <- function(n){
       set.seed(seed)
-      replicate(as.integer(n), draw_inds(1))
+      replicate(as.integer(n), Draw_inds(1))
 
-      return(self$box[draw_inds(1)])
+      return(self$box[Draw_inds(1)])
     }
 
     return(getitem(InfiniteSequence(x), n))
   } else {
-    draws = self$box[draw_inds(self$size)]
+    Draws = self$box[Draw_inds(self$size)]
     if (!self$order_matters)
-      draws = sort(draws)
+      Draws = sort(Draws)
 
-    return(draws)
+    return(Draws)
   }
 }
 
@@ -281,6 +277,6 @@ check_same_probSpace.Event <- function(self, other){
 # which evaluate to ((2 < X) and (X < 5)).
 # __bool__ : implement later when I got to test all above.
 #' @export
-draw.Event <- function(self){
-  return(self$fun(draw(self$probSpace)))
+Draw.Event <- function(self){
+  return(self$fun(Draw(self$probSpace)))
 }
