@@ -7,7 +7,8 @@
 ProbabilitySpace(DrawFunc)
 }
 \arguments{
-\item{Draw}{function}
+\item{Draw}{function: A function explaining how to draw one 
+outcome from the probability space.}
 }
 \value{
 ProbabilitySpace

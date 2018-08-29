@@ -2,13 +2,7 @@
 % Please edit documentation in R/random_variables.R
 \name{RV}
 \alias{RV}
-\title{Defines a random variable.
- A random variable is a function which maps an outcome of
- a probability space to a number.  Simulating a random
- variable is a two-step process: first, a Draw is taken
- from the underlying probability space; then, the function
- is applied to that Draw to obtain the realized value of
- the random variable.}
+\title{Defines a random variable.}
 \usage{
 RV(probSpace, fun = function(x) x)
 }
@@ -16,14 +10,14 @@ RV(probSpace, fun = function(x) x)
 \item{probSpace}{(ProbabilitySpace): the underlying
 probability space of the random variable.}
 
-\item{fun}{(function, optional)}
+\item{fun}{(function, optional):  a function that maps draws from the 
+probability space to numbers.}
 }
 \value{
 A RV
 }
 \description{
-Defines a random variable.
- A random variable is a function which maps an outcome of
+A random variable is a function which maps an outcome of
  a probability space to a number.  Simulating a random
  variable is a two-step process: first, a Draw is taken
  from the underlying probability space; then, the function
@@ -31,6 +25,17 @@ Defines a random variable.
  the random variable.
 }
 \examples{
-A single Draw is a sequence of 0s and 1s
-, e.g., (0, 0, 1, 0, 1). P = BoxModel([0, 1], size=5)
+# a single Draw is a sequence of 0s and 1s, e.g., (0, 0, 1, 0, 1).
+P = BoxModel(c(0, 1), size=5)
+# X counts the number of 1s in the draw, e.g., 5
+X = RV(P, sum)
+
+# the function is the identity, so Y has a Normal(0, 1) distribution
+Y = RV(Normal(0, 1)
+
+# a single draw from BivariateNormal is a tuple of two numbers
+P = BivariateNormal()
+# Z is the smaller of the two numbers
+Z = RV(P, min)
+
 }

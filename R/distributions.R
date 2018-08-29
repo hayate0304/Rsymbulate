@@ -10,16 +10,13 @@ Distribution <- function(params, discrete = TRUE){
   return(me)
 }
 
+#' Defines a probability space for a binomial distribution.
+#'
+#' @param n (int): number of trials
+#' @param p (float): probability (number between 0 and 1)
+#' that each trial results in a "success" (i.e., 1)
 #' @export
 Binomial <- function(n, p){
-  # Defines a probability space for a binomial
-  # distribution.
-  #
-  # Attributes:
-  #   n (int): number of trials
-  # p (float): probability (number between 0 and 1)
-  # that each trial results in a "success" (i.e., 1)
-
   if (n >= 0 && is.numeric(n) && round(n) == n){
     self.n = n
   } else
@@ -37,18 +34,18 @@ Binomial <- function(n, p){
   return(me)
 }
 
+#' A function that takes no arguments and
+#' returns a single draw from the Binomial distribution.
 #' @export
 Draw.Binomial <- function(self)
   return(rbinom(1, self$n, self$p))
 
+#' Defines a probability space for a discrete uniform distribution.
+#' 
+#' @param a (int): lower bound for possible values
+#' @param b (int): upper bound for possible values
 #' @export
 DiscreteUniform <- function(self, a = 0, b = 1){
-  # Defines a probability space for a discrete uniform distribution.
-  #
-  # Attributes:
-  #   a (int): lower bound for possible values
-  # b (int): upper bound for possible values
-
   if (a >= b)
     stop("b cannot be less than or equal to a")
 
@@ -60,10 +57,16 @@ DiscreteUniform <- function(self, a = 0, b = 1){
   return(me)
 }
 
+#' A function that takes no arguments and
+#' returns a single draw from the Discrete Uniform distribution.
 #' @export
 Draw.DiscreteUniform <- function(self)
   return(sample(self$a : self$b, 1))
 
+#' Defines a probability space for a uniform distribution.
+#'
+#' @param a (double): lower bound for possible values
+#' @param b (double): upper bound for possible values
 #' @export
 Uniform <- function(a=0.0, b=1.0){
   if (a > b)
@@ -77,10 +80,18 @@ Uniform <- function(a=0.0, b=1.0){
   return(me)
 }
 
+#' A function that takes no arguments and
+#' returns a single draw from the Uniform distribution.
 #' @export
 Draw.Uniform <- function(self)
   return(runif(1, self$a, self$b))
 
+#' Defines a probability space for a normal distribution.
+#' 
+#' @param mean (double): mean parameter of the normal distribution
+#' @param sd (double): standard deviation parameter of the normal
+#' distribution (if specified, var parameter will be ignored)
+#' @param var (double): variance parameter of the normal distribution
 #' @export
 Normal <- function(mean=0.0, sd=1.0, var=NULL){
   if (identical(var, NULL)){
@@ -106,6 +117,8 @@ Normal <- function(mean=0.0, sd=1.0, var=NULL){
   return(me)
 }
 
+#' A function that takes no arguments and
+#' returns a single draw from the Normal distribution.
 #' @export
 Draw.Normal <- function(self)
   return(rnorm(1, self$mean, self$scale))

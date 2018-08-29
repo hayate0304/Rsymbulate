@@ -9,7 +9,8 @@
 
 #' Defines a probability space.
 #'
-#' @param Draw function
+#' @param Draw function: A function explaining how to draw one 
+#' outcome from the probability space.
 #' @return ProbabilitySpace
 #' @export
 ProbabilitySpace <- function(DrawFunc){
@@ -38,9 +39,9 @@ Sim <- function(self, n)  UseMethod("Sim")
 #' @export
 Sim.default <- function(self, n)  return(NULL)
 
-#' Simulate n Draws from probability space.
+#' Simulate n draws from probability space.
 #'
-#' @param n (int): How many Draws to make.
+#' @param n (int): How many draws to make.
 #' @return A vector containing the Simulation results.
 #' @export
 Sim.ProbabilitySpace <- function(self, n){
@@ -51,7 +52,7 @@ Sim.ProbabilitySpace <- function(self, n){
 }
 
 check_same <- function(self, other)  UseMethod("check_same")
-check_same.default <- function(self, other)  return(NULL)
+check_same.default <- function(self, other)  stop("Could not perform the function")
 check_same.ProbabilitySpace <- function(self, other){
   if (inherits(other, "ArbitrarySpace")){
     invisible()
@@ -63,7 +64,7 @@ check_same.ProbabilitySpace <- function(self, other){
 #' @export
 `%*%` <- function(self, other) UseMethod("%*%")
 #' @export
-`%*%.default` <- function(self, other) return(NULL)
+`%*%.default` <- function(self, other) stop("Could not perform the operation")
 
 #' @export
 `%*%.ProbabilitySpace` <- function(self, other){
@@ -80,7 +81,7 @@ check_same.ProbabilitySpace <- function(self, other){
 #' @export
 `%^%` <- function(self, exponent)  UseMethod("%^%")
 #' @export
-`%^%.default` <- function(self, exponent)  return(NULL)
+`%^%.default` <- function(self, exponent)  stop("Could not perform the operation")
 
 #' @export
 `%^%.ProbabilitySpace` <- function(self, exponent){
@@ -120,11 +121,94 @@ ArbitrarySpace <- function(){
 }
 
 #---------------------------------------------------------------
+# Event class
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Event <- function(probSpace, fun){
+  me <- list(probSpace = probSpace,
+             fun = fun)
+  
+  class(me) <- append(class(me), "Event")
+  return(me)
+}
+
+check_same_probSpace <- function(self, other)
+  UseMethod("check_same_probSpace")
+
+check_same_probSpace.default <- function(self, other)
+  return(NULL)
+
+check_same_probSpace.Event <- function(self, other){
+  check_same(self$probSpace, other$probSpace)
+}
+
+#' @export
+`%&%` <- function(self, other) UseMethod("%&%")
+#' @export
+`%&%.default` <- function(self, other) stop("Could not perform the operation")
+
+# define the event (A & B)
+#' @export
+`%&%.Event` <- function(self, other){
+  check_same_probSpace(self, other)
+  
+  if (inherits(other, "Event")){
+    return(Event(self$probSpace, function(x) self$fun(x) & other$fun(x)))
+  }
+}
+
+# define the event (A | B)
+#' @export
+`%|%` <- function(self, other) UseMethod("%|%")
+#' @export
+`%|%.default` <- function(self, other) stop("Could not perform the operation")
+
+#' @export
+`%|%.Event` <- function(self, other){
+  check_same_probSpace(self, other)
+  
+  if (inherits(other, "Event")){
+    return(Event(self$probSpace, function(x) self$fun(x) | other$fun(x)))
+  }
+}
+
+# define the event (-A)
+#' @export
+`%!%` <- function(self) UseMethod("%|%")
+#' @export
+`%!%.default` <- function(self) stop("Could not perform the operation")
+
+#' @export
+`%!%.Event` <- function(self){
+  return(Event(self$probSpace, function(x) !self$fun()))
+}
+
+# This prevents users from writing expressions like 2 < X < 5,
+# which evaluate to ((2 < X) and (X < 5)).
+# __bool__ : to be implemented later when I got to test all above.
+
+#' @export
+Draw.Event <- function(self){
+  return(self$fun(Draw(self$probSpace)))
+}
+
+#---------------------------------------------------------------
 # BoxModel class
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' Defines a probability space from a box model.
 #'
-#' @param box, size, replace, probs, order_matters
+#' @param box (vector or list): The box to sample from.
+#' The box can be specified either directly as a list
+#' of objects or indirectly as a dict of objects and
+#' their counts.
+#' @param size (int): How many draws to make.
+#' @param replace (bool): Sample with replacement or without?
+#' @param probs (vector): Probabilities of sampling each ticket
+#' (by default, all tickets are equally likely). Note
+#' that this is ignored if box is specified as a list.
+#' @param order_matters (bool): Should we count different
+#' orderings of the same tickets as different outcomes?
+#' Essentially, this determines whether the draws are
+#' sorted before returning or not.
 #' @return A BoxModel
 #' @export
 BoxModel <- function(box, size = 1, replace = TRUE,
@@ -158,6 +242,16 @@ BoxModel <- function(box, size = 1, replace = TRUE,
   return(me)
 }
 
+#' A function that takes no arguments and returns a value(s) from the 
+#' "box" argument of the BoxModel.
+#' 
+#' Based on BoxModel inputs: 
+#' Number of values returned depends on the input of the "size" 
+#' argument. 
+#' Whether or not a value in the box can appear multiple times
+#' depends on the "replace" argument.
+#' If a list of probabilities is specified, values drawn will be drawn
+#' with the specified probabilities.
 #' @export
 Draw.BoxModel <- function(self){
 
@@ -196,6 +290,10 @@ Draw.BoxModel <- function(self){
 #---------------------------------------------------------------
 # DeckOfCards class
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' Defines the probability space for drawing from a deck of cards.
+#' 
+#' @param size (int): How many draws to make.
+#' @param replace (bool): Sample with replacement or without?
 #' @export
 DeckOfCards <- function(size = 1, replace = FALSE, order_matters = TRUE){
   deck <- paste(rep(c(2:10, "J", "Q", "K", "A"), 4),  #card values
@@ -211,72 +309,3 @@ DeckOfCards <- function(size = 1, replace = FALSE, order_matters = TRUE){
   return(me)
 }
 
-#---------------------------------------------------------------
-# Event class
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Event <- function(probSpace, fun){
-  me <- list(probSpace = probSpace,
-             fun = fun)
-
-  class(me) <- append(class(me), "Event")
-  return(me)
-}
-
-check_same_probSpace <- function(self, other)
-  UseMethod("check_same_probSpace")
-
-check_same_probSpace.default <- function(self, other)
-  return(NULL)
-
-check_same_probSpace.Event <- function(self, other){
-  check_same(self$probSpace, other$probSpace)
-}
-
-#' @export
-`%&%` <- function(self, other) UseMethod("%&%")
-#' @export
-`%&%.default` <- function(self, other) stop("Could not perform the operation")
-
-# define the event (A & B)
-#' @export
-`%&%.Event` <- function(self, other){
-  check_same_probSpace(self, other)
-
-  if (inherits(other, "Event")){
-    return(Event(self$probSpace, function(x) self$fun(x) & other$fun(x)))
-  }
-}
-
-# define the event (A | B)
-#' @export
-`%|%` <- function(self, other) UseMethod("%|%")
-#' @export
-`%|%.default` <- function(self, other) return(NULL)
-
-#' @export
-`%|%.Event` <- function(self, other){
-  check_same_probSpace(self, other)
-
-  if (inherits(other, "Event")){
-    return(Event(self$probSpace, function(x) self$fun(x) | other$fun(x)))
-  }
-}
-
-# define the event (-A)
-#' @export
-`%!%` <- function(self) UseMethod("%|%")
-#' @export
-`%!%.default` <- function(self) return(NULL)
-
-#' @export
-`%!%.Event` <- function(self){
-  return(Event(self$probSpace, function(x) !self$fun()))
-}
-
-# This prevents users from writing expressions like 2 < X < 5,
-# which evaluate to ((2 < X) and (X < 5)).
-# __bool__ : implement later when I got to test all above.
-#' @export
-Draw.Event <- function(self){
-  return(self$fun(Draw(self$probSpace)))
-}

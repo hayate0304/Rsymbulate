@@ -1,0 +1,17 @@
+---
+title: "Getting Started with Symbulate"
+output: html_notebook
+---
+
+# Section 2. Random Variables
+
+**Every time you start Symbulate**, you must first run (SHIFT-ENTER) the following commands.
+
+```{r}
+library(symbulate)
+options(max.print = 100)
+```
+
+This section provides an introduction to the Symbulate commands for simulating and summarizing values of a random variable.
+
+### **Example 2.1: Counting the number of Heads in a sequence of coin flips**

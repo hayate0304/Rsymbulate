@@ -8,7 +8,23 @@ BoxModel(box, size = 1, replace = TRUE, probs = NULL,
   order_matters = TRUE)
 }
 \arguments{
-\item{box, }{size, replace, probs, order_matters}
+\item{box}{(vector or list): The box to sample from.
+The box can be specified either directly as a list
+of objects or indirectly as a dict of objects and
+their counts.}
+
+\item{size}{(int): How many draws to make.}
+
+\item{replace}{(bool): Sample with replacement or without?}
+
+\item{probs}{(vector): Probabilities of sampling each ticket
+(by default, all tickets are equally likely). Note
+that this is ignored if box is specified as a list.}
+
+\item{order_matters}{(bool): Should we count different
+orderings of the same tickets as different outcomes?
+Essentially, this determines whether the draws are
+sorted before returning or not.}
 }
 \value{
 A BoxModel

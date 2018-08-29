@@ -2,16 +2,16 @@
 % Please edit documentation in R/probability_space.R
 \name{Sim.ProbabilitySpace}
 \alias{Sim.ProbabilitySpace}
-\title{Simulate n Draws from probability space.}
+\title{Simulate n draws from probability space.}
 \usage{
 \method{Sim}{ProbabilitySpace}(self, n)
 }
 \arguments{
-\item{n}{(int): How many Draws to make.}
+\item{n}{(int): How many draws to make.}
 }
 \value{
 A vector containing the Simulation results.
 }
 \description{
-Simulate n Draws from probability space.
+Simulate n draws from probability space.
 }

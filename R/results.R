@@ -1,6 +1,11 @@
-#
-# source("utils.R")
-# source("Plot.R")
+# Data structures for storing the results of a simulation.
+# 
+# This module provides data structures for storing the
+# results of a simulation, either outcomes from a
+# probability space or realizations of a random variable /
+# random process.
+# 
+
 #' @import ggplot2
 #---------------------------------------------------------
 #             Results Class
@@ -18,6 +23,14 @@ Results <- function(results){
 Apply <- function(self, fun, ...) UseMethod("Apply")
 #' @export
 Apply.default <- function(self, fun, ...) stop("Could not perform the function")
+
+#' Apply a function to each outcome of a simulation.
+#' 
+#' @param fun: A function to apply to each outcome.
+#' @return Results: A Results object of the same length,
+#' where each outcome is the result of applying
+#' the function to each outcome from the original
+#' Results object.
 #' @export
 Apply.Results <- function(self, fun, ...){
   if (get_dimesion(self) == 0){
@@ -55,6 +68,13 @@ Tabulate <- function(self, normalize = FALSE) UseMethod("Tabulate")
 #' @export
 Tabulate.default <- function(self, normalize = FALSE) stop("Could not perform the function")
 
+#' Counts up how much of each outcome there were.
+#'
+#' @param normalize (bool): If True, return the relative
+#' frequency. Otherwise, return the counts.
+#' Defaults to False.
+#' @return Data frame: A data frame with each of the observed
+#' outcomes and their frequencies.
 #' @export
 Tabulate.Results <- function(self, normalize = FALSE){
   df <- plyr::count(as.data.frame(self$results))
@@ -83,6 +103,20 @@ Tabulate.Results <- function(self, normalize = FALSE){
 Filter <- function(self, fun) UseMethod("Filter")
 #' @export
 Filter.default <- function(self, fun) stop("Could not perform the function")
+
+#' Filters the results of a simulation and
+#' returns only those outcomes that satisfy
+#' a given criterion.
+#' 
+#' @param fun (outcome -> bool): A function that
+#' takes in an outcome and returns a
+#' True / False. Only the outcomes that
+#' return True will be kept; the others
+#' will be filtered out.
+#' 
+#' @return Results: Another Results object containing
+#' only those outcomes for which the function
+#' returned True.
 #' @export
 Filter.Results <- function(self, fun){
   return(Results(self$results[fun(self$results)]))
@@ -138,11 +172,23 @@ Filter_geq.Results <- function(self, value)
 
 #------------------------------------------------------
 # Count family
+# The following functions return an integer indicating
+# how many outcomes passed a given criterion.
 #------------------------------------------------------
 #' @export
 Count <- function(self, value) UseMethod("Count")
 #' @export
 Count.default <- function(self, value) stop("Could not perform the function")
+
+#' Counts the number of outcomes that satisfied a given criterion.
+#'
+#' @param fun (outcome -> bool): A function that
+#' takes in an outcome and returns a
+#' True / False. Only the outcomes that
+#' return True will be counted.
+#'
+#' @return int: The number of outcomes for which
+#' the function returned True.
 #' @export
 Count.Results <- function(self, fun = function(x) TRUE){
   return(length(Filter(self, fun)$result))
