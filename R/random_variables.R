@@ -238,7 +238,7 @@ log.RV <- function(self, base = exp(1))
 #' @export
 `%-%.RV` <- function(self, other){
   check_same_probSpace(self, other)
-
+  # print("Here")
   if (inherits(self, "RV")){
     if (is_scalar(other)){
       return(apply.RV(self, function(x) self$fun(x) - other))

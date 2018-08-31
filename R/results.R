@@ -13,7 +13,7 @@
 #' @export
 Results <- function(results){
   me <- list(results = results)
-  class(me) <- c(class(me), "Results", "numeric")
+  class(me) <- c(class(me), "Results")
 
   return(me)
 }
@@ -71,7 +71,7 @@ tabulate.default <- base::tabulate
 # Add a ... argument to tabulate.default to allow passing of package checks:
 formals(tabulate.default) <- c(formals(tabulate.default), alist(... = ))
 
-#' counts up how much of each outcome there were.
+#' Counts up how much of each outcome there were.
 #'
 #' @param normalize (bool): If True, return the relative
 #' frequency. Otherwise, return the counts.
@@ -277,18 +277,22 @@ plot.Results <- function(self)
 #--------------------------------------------------------------------------
 # For operations
 #--------------------------------------------------------------------------
+#' @export
 `%-%.Results` <- function(self, scalar){
   return(self$results - scalar)
 }
 
+#' @export
 `%+%.Results` <- function(self, scalar){
   return(self$results + scalar)
 }
 
+#' @export
 `%/%.Results` <- function(self, scalar){
   return(self$results / scalar)
 }
 
+#' @export
 `%*%.Results` <- function(self, scalar){
   return(self$results * scalar)
 }
@@ -344,7 +348,7 @@ sd.Results <- function(self)
 RVResults <- function(results){
   me <- list(results = results)
 
-  class(me) <- c(class(me), "RVResults", "Results", "numeric")
+  class(me) <- c(class(me), "RVResults", "Results")
   return(me)
 }
 
