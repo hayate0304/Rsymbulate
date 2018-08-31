@@ -6,7 +6,7 @@
 Distribution <- function(params, discrete = TRUE){
   me <- list()
 
-  class(me) <- rlist::list.append(class(me), "Distribution", "ProbabilitySpace")
+  class(me) <- c(class(me), "Distribution", "ProbabilitySpace")
   return(me)
 }
 
@@ -29,15 +29,14 @@ Binomial <- function(n, p){
 
   me <- list(n = self.n,
              p = self.p)
-  class(me) <- rlist::list.append(class(me), "Binomial", "Distribution",
-                                  "ProbabilitySpace")
+  class(me) <- c(class(me), "Binomial", "Distribution", "ProbabilitySpace")
   return(me)
 }
 
 #' A function that takes no arguments and
 #' returns a single draw from the Binomial distribution.
 #' @export
-Draw.Binomial <- function(self)
+draw.Binomial <- function(self)
   return(rbinom(1, self$n, self$p))
 
 #' Defines a probability space for a discrete uniform distribution.
@@ -52,15 +51,14 @@ DiscreteUniform <- function(self, a = 0, b = 1){
   me <- list(a = a,
              b = b,
              xlim = c(a,b))
-  class(me) <- rlist::list.append(class(me), "DiscreteUniform", "Distribution",
-                                  "ProbabilitySpace")
+  class(me) <- c(class(me), "DiscreteUniform", "Distribution", "ProbabilitySpace")
   return(me)
 }
 
 #' A function that takes no arguments and
 #' returns a single draw from the Discrete Uniform distribution.
 #' @export
-Draw.DiscreteUniform <- function(self)
+draw.DiscreteUniform <- function(self)
   return(sample(self$a : self$b, 1))
 
 #' Defines a probability space for a uniform distribution.
@@ -75,15 +73,14 @@ Uniform <- function(a=0.0, b=1.0){
   me <- list(a = a,
              b = b,
              xlim = c(a,b))
-  class(me) <- rlist::list.append(class(me), "Uniform", "Distribution",
-                                  "ProbabilitySpace")
+  class(me) <- c(class(me), "Uniform", "Distribution", "ProbabilitySpace")
   return(me)
 }
 
 #' A function that takes no arguments and
 #' returns a single draw from the Uniform distribution.
 #' @export
-Draw.Uniform <- function(self)
+draw.Uniform <- function(self)
   return(runif(1, self$a, self$b))
 
 #' Defines a probability space for a normal distribution.
@@ -112,14 +109,13 @@ Normal <- function(mean=0.0, sd=1.0, var=NULL){
 
   me <- list(mean = mean,
              scale = scale)
-  class(me) <- rlist::list.append(class(me), "Normal", "Distribution",
-                                  "ProbabilitySpace")
+  class(me) <- c(class(me), "Normal", "Distribution", "ProbabilitySpace")
   return(me)
 }
 
 #' A function that takes no arguments and
 #' returns a single draw from the Normal distribution.
 #' @export
-Draw.Normal <- function(self)
+draw.Normal <- function(self)
   return(rnorm(1, self$mean, self$scale))
 

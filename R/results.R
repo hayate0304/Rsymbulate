@@ -13,16 +13,10 @@
 #' @export
 Results <- function(results){
   me <- list(results = results)
-  class(me) <- append(class(me), "Results")
+  class(me) <- c(class(me), "Results", "numeric")
 
   return(me)
-
 }
-
-#' @export
-Apply <- function(self, fun, ...) UseMethod("Apply")
-#' @export
-Apply.default <- function(self, fun, ...) stop("Could not perform the function")
 
 #' Apply a function to each outcome of a simulation.
 #' 
@@ -32,19 +26,25 @@ Apply.default <- function(self, fun, ...) stop("Could not perform the function")
 #' the function to each outcome from the original
 #' Results object.
 #' @export
-Apply.Results <- function(self, fun, ...){
+apply.Results <- function(self, fun, ...){
   if (get_dimesion(self) == 0){
-    return(Results(sapply(self$results, fun, ...)))
+    results <- sapply(self$results, fun, ...)
   } else
-    return(Results(apply(self$results, 1, fun, ...)))
+    results <- apply(self$results, 1, fun, ...)
+  
+  # Python code uses type(self) for typecasting, not sure how to do that in R so if-else is used 
+  if (inherits(self, "RVResults")){
+    return(RVResults(results))
+  } else 
+    return(Results(results))
 }
 
 #' @export
-Get <- function(self, i) UseMethod("Get")
+get <- function(self, i) UseMethod("get")
 #' @export
-Get.default <- function(self, i) stop("Could not perform the function")
+get.default <- function(self, i) stop("Could not perform the function")
 #' @export
-Get.Results <- function(self, i){
+get.Results <- function(self, i){
   if (is.matrix(self$results)){
     return(self$results[, i])
   } else 
@@ -52,11 +52,11 @@ Get.Results <- function(self, i){
 }
   
 #' @export
-Len <- function(self) UseMethod("Len")
+len <- function(self) UseMethod("len")
 #' @export
-Len.default <- function(self) stop("Could not perform the function")
+len.default <- function(self) stop("Could not perform the function")
 #' @export
-Len.Results <- function(self){
+len.Results <- function(self){
   if (is.matrix(self$results)){
     return(dim(self$results)[1])
   } else 
@@ -64,11 +64,14 @@ Len.Results <- function(self){
 }
   
 #' @export
-Tabulate <- function(self, normalize = FALSE) UseMethod("Tabulate")
+tabulate <- function(self, ...) UseMethod("tabulate")
 #' @export
-Tabulate.default <- function(self, normalize = FALSE) stop("Could not perform the function")
+tabulate.default <- base::tabulate
 
-#' Counts up how much of each outcome there were.
+# Add a ... argument to tabulate.default to allow passing of package checks:
+formals(tabulate.default) <- c(formals(tabulate.default), alist(... = ))
+
+#' counts up how much of each outcome there were.
 #'
 #' @param normalize (bool): If True, return the relative
 #' frequency. Otherwise, return the counts.
@@ -76,7 +79,7 @@ Tabulate.default <- function(self, normalize = FALSE) stop("Could not perform th
 #' @return Data frame: A data frame with each of the observed
 #' outcomes and their frequencies.
 #' @export
-Tabulate.Results <- function(self, normalize = FALSE){
+tabulate.Results <- function(self, normalize = FALSE){
   df <- plyr::count(as.data.frame(self$results))
 
   if (ncol(df) == 2)
@@ -96,15 +99,18 @@ Tabulate.Results <- function(self, normalize = FALSE){
 }
 
 #------------------------------------------------------------------------
-# Filter family
+# filter family
 #------------------------------------------------------------------------
 
 #' @export
-Filter <- function(self, fun) UseMethod("Filter")
+filter <- function(self, ...) UseMethod("filter")
 #' @export
-Filter.default <- function(self, fun) stop("Could not perform the function")
+filter.default <- stats::filter
 
-#' Filters the results of a simulation and
+# Add a ... argument to filter.default to allow passing of package checks:
+formals(filter.default) <- c(formals(filter.default), alist(... = ))
+
+#' filters the results of a simulation and
 #' returns only those outcomes that satisfy
 #' a given criterion.
 #' 
@@ -118,69 +124,73 @@ Filter.default <- function(self, fun) stop("Could not perform the function")
 #' only those outcomes for which the function
 #' returned True.
 #' @export
-Filter.Results <- function(self, fun){
-  return(Results(self$results[fun(self$results)]))
+filter.Results <- function(self, fun){
+  # Python code uses type(self) for typecasting, not sure how to do that in R so if-else is used 
+  if (inherits(self, "RVResults")){
+    return(RVResults(self$results[fun(self$results)]))
+  } else 
+    return(Results(self$results[fun(self$results)]))
 }
 
 #' @export
-Filter_eq <- function(self, value) UseMethod("Filter_eq")
+filter_eq <- function(self, value) UseMethod("filter_eq")
 #' @export
-Filter_eq.default <- function(self, value) stop("Could not perform the function")
+filter_eq.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Filter_eq.Results <- function(self, value)
-  return(Results(self$results[self$results == value]))
+filter_eq.Results <- function(self, value)
+  return(filter(self, function(x) x == value))
 
 #' @export
-Filter_neq <- function(self, value) UseMethod("Filter_neq")
+filter_neq <- function(self, value) UseMethod("filter_neq")
 #' @export
-Filter_neq.default <- function(self, value) stop("Could not perform the function")
+filter_neq.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Filter_neq.Results <- function(self, value)
-  return(Results(self$results[self$results != value]))
+filter_neq.Results <- function(self, value)
+  return(filter(self, function(x) x != value))
 
 #' @export
-Filter_lt <- function(self, value) UseMethod("Filter_lt")
+filter_lt <- function(self, value) UseMethod("filter_lt")
 #' @export
-Filter_lt.default <- function(self, value) stop("Could not perform the function")
+filter_lt.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Filter_lt.Results <- function(self, value)
-  return(Results(self$results[self$results < value]))
+filter_lt.Results <- function(self, value)
+  return(filter(self, function(x) x < value))
 
 #' @export
-Filter_leq <- function(self, value) UseMethod("Filter_leq")
+filter_leq <- function(self, value) UseMethod("filter_leq")
 #' @export
-Filter_leq.default <- function(self, value) stop("Could not perform the function")
+filter_leq.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Filter_leq.Results <- function(self, value)
-  return(Results(self$results[self$results <= value]))
+filter_leq.Results <- function(self, value)
+  return(filter(self, function(x) x <= value))
 
 #' @export
-Filter_gt <- function(self, value) UseMethod("Filter_gt")
+filter_gt <- function(self, value) UseMethod("filter_gt")
 #' @export
-Filter_gt.default <- function(self, value) stop("Could not perform the function")
+filter_gt.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Filter_gt.Results <- function(self, value)
-  return(Results(self$results[self$results > value]))
+filter_gt.Results <- function(self, value)
+  return(filter(self, function(x) x > value))
 
 #' @export
-Filter_geq <- function(self, value) UseMethod("Filter_geq")
+filter_geq <- function(self, value) UseMethod("filter_geq")
 #' @export
-Filter_geq.default <- function(self, value) stop("Could not perform the function")
+filter_geq.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Filter_geq.Results <- function(self, value)
-  return(Results(self$results[self$results >= value]))
+filter_geq.Results <- function(self, value)
+  return(filter(self, function(x) x >= value))
 
 #------------------------------------------------------
-# Count family
+# count family
 # The following functions return an integer indicating
 # how many outcomes passed a given criterion.
 #------------------------------------------------------
 #' @export
-Count <- function(self, value) UseMethod("Count")
+count <- function(self, value) UseMethod("count")
 #' @export
-Count.default <- function(self, value) stop("Could not perform the function")
+count.default <- function(self, value) stop("Could not perform the function")
 
-#' Counts the number of outcomes that satisfied a given criterion.
+#' counts the number of outcomes that satisfied a given criterion.
 #'
 #' @param fun (outcome -> bool): A function that
 #' takes in an outcome and returns a
@@ -190,107 +200,141 @@ Count.default <- function(self, value) stop("Could not perform the function")
 #' @return int: The number of outcomes for which
 #' the function returned True.
 #' @export
-Count.Results <- function(self, fun = function(x) TRUE){
-  return(length(Filter(self, fun)$result))
+count.Results <- function(self, fun = function(x) TRUE){
+  return(length(filter(self, fun)$result))
 }
 
 #' @export
-Count_eq <- function(self, value) UseMethod("Count_eq")
+count_eq <- function(self, value) UseMethod("count_eq")
 #' @export
-Count_eq.default <- function(self, value) stop("Could not perform the function")
+count_eq.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Count_eq.Results <- function(self, value){
-  return(length(Filter_eq(self, value)$result))
+count_eq.Results <- function(self, value){
+  return(length(filter_eq(self, value)$result))
 }
 
 #' @export
-Count_neq <- function(self, value) UseMethod("Count_neq")
+count_neq <- function(self, value) UseMethod("count_neq")
 #' @export
-Count_neq.default <- function(self, value) stop("Could not perform the function")
+count_neq.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Count_neq.Results <- function(self, value){
-  return(length(Filter_neq(self, value)$result))
+count_neq.Results <- function(self, value){
+  return(length(filter_neq(self, value)$result))
 }
 
 #' @export
-Count_lt <- function(self, value) UseMethod("Count_lt")
+count_lt <- function(self, value) UseMethod("count_lt")
 #' @export
-Count_lt.default <- function(self, value) stop("Could not perform the function")
+count_lt.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Count_lt.Results <- function(self, value){
-  return(length(Filter_lt(self, value)$result))
+count_lt.Results <- function(self, value){
+  return(length(filter_lt(self, value)$result))
 }
 
 #' @export
-Count_leq <- function(self, value) UseMethod("Count_leq")
+count_leq <- function(self, value) UseMethod("count_leq")
 #' @export
-Count_leq.default <- function(self, value) stop("Could not perform the function")
+count_leq.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Count_leq.Results <- function(self, value){
-  return(length(Filter_leq(self, value)$result))
+count_leq.Results <- function(self, value){
+  return(length(filter_leq(self, value)$result))
 }
 
 #' @export
-Count_gt <- function(self, value) UseMethod("Count_gt")
+count_gt <- function(self, value) UseMethod("count_gt")
 #' @export
-Count_gt.default <- function(self, value) stop("Could not perform the function")
+count_gt.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Count_gt.Results <- function(self, value){
-  return(length(Filter_gt(self, value)$result))
+count_gt.Results <- function(self, value){
+  return(length(filter_gt(self, value)$result))
 }
 
 #' @export
-Count_geq <- function(self, value) UseMethod("Count_geq")
+count_geq <- function(self, value) UseMethod("count_geq")
 #' @export
-Count_geq.default <- function(self, value) stop("Could not perform the function")
+count_geq.default <- function(self, value) stop("Could not perform the function")
 #' @export
-Count_geq.Results <- function(self, value){
-  return(length(Filter_geq(self, value)$result))
+count_geq.Results <- function(self, value){
+  return(length(filter_geq(self, value)$result))
 }
 
 #' @export
-Plot.Results <- function(self)
+plot <- function(self, ...) UseMethod("plot")
+#' @export
+plot.default <- graphics::plot
+
+# Add a ... argument to plot.default to allow passing of package checks:
+formals(plot.default) <- c(formals(plot.default), alist(... = ))
+
+#' @export
+plot.Results <- function(self)
   stop(paste("Only simulations of random variables (RV) ",
              "can be plotted, but you simulated from a ",
              "probability space. You must first define a RV ",
              "on your probability space and simulate it. ",
-             "Then call Plot() on those simulations."))
+             "Then call plot() on those simulations."))
 
+#--------------------------------------------------------------------------
+# For operations
+#--------------------------------------------------------------------------
+`%-%.Results` <- function(self, scalar){
+  return(self$results - scalar)
+}
+
+`%+%.Results` <- function(self, scalar){
+  return(self$results + scalar)
+}
+
+`%/%.Results` <- function(self, scalar){
+  return(self$results / scalar)
+}
+
+`%*%.Results` <- function(self, scalar){
+  return(self$results * scalar)
+}
+
+#--------------------------------------------------------------------------
+# stats functions
+#--------------------------------------------------------------------------
 #' @export
-Mean <- function(self) UseMethod("Mean")
-#' @export
-Mean <- function(self) stop("Could not perform the function")
-#' @export
-Mean.Results <- function(self)
-  stop(paste("You can only call Mean() on simulations of ",
+mean.Results <- function(self)
+  stop(paste("You can only call mean() on simulations of ",
              "random variables (RV), but you simulated from ",
              "a probability space. You must first define ",
              "a RV on your probability space and simulate it ",
-             "Then call Mean() on those simulations."))
+             "Then call mean() on those simulations."))
 
 #' @export
-Var <- function(self) UseMethod("Var")
+var <- function(self, ...) UseMethod("var")
 #' @export
-Var.default <- function(self) stop("Could not perform the function")
+var.default <- stats::var
+
+# Add a ... argument to var.default to allow passing of package checks:
+formals(var.default) <- c(formals(var.default), alist(... = ))
+
 #' @export
-Var.Results <- function(self)
-  stop(paste("You can only call Var() on simulations of ",
+var.Results <- function(self)
+  stop(paste("You can only call var() on simulations of ",
              "random variables (RV), but you simulated from ",
              "a probability space. You must first define ",
              "a RV on your probability space and simulate it ",
-             "Then call Var() on those simulations."))
+             "Then call var() on those simulations."))
 
 #' @export
-SD <- function(self) UseMethod("SD")
+sd <- function(self) UseMethod("sd")
 #' @export
-SD.default <- function(self) stop("Could not perform the function")
+sd.default <- stats::sd
+
+# Add a ... argument to sd.default to allow passing of package checks:
+formals(sd.default) <- c(formals(sd.default), alist(... = ))
+
 #' @export
-SD.Results <- function(self)
-  stop(paste("You can only call SD() on simulations of ",
+sd.Results <- function(self)
+  stop(paste("You can only call sd() on simulations of ",
              "random variables (RV), but you simulated from ",
              "a probability space. You must first define ",
              "a RV on your probability space and simulate it ",
-             "Then call SD() on those simulations."))
+             "Then call sd() on those simulations."))
 
 
 #---------------------------------------------------------
@@ -300,28 +344,19 @@ SD.Results <- function(self)
 RVResults <- function(results){
   me <- list(results = results)
 
-  class(me) <- rlist::list.append(class(me), "RVResults", "Results")
+  class(me) <- c(class(me), "RVResults", "Results", "numeric")
   return(me)
 }
 
 #' @export
-Plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
-                 jitter=FALSE, bins=NULL, add = FALSE)
-  UseMethod("Plot")
-#' @export
-Plot.default <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
-                         jitter=FALSE, bins=NULL, add = FALSE)
-  stop("Not implemented")
-
-#' @export
-Plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
+plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
                             jitter=FALSE, bins=NULL, add = FALSE){
 
   dim <- get_dimesion(self)
 
   # If RVResults is vector
   if (dim == 0){
-    tb <- Tabulate(self)
+    tb <- tabulate(self)
     heights <- tb$Value
     discrete <- is_discrete(heights)
     #print(paste("Dis: ", discrete))
@@ -338,8 +373,8 @@ Plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
       bins <- 30
 
     color <- get_next_color()
-    ylab <- "Count"
-    tb <- Tabulate(self, normalize = normalize)
+    ylab <- "count"
+    tb <- tabulate(self, normalize = normalize)
 
     #--------------------------------------
     ## if density in type to be implemented
@@ -388,8 +423,8 @@ Plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
       if (normalize)
         ylab = "Relative Frequency"
 
-      # Plot the impulses
-      # graphics::Plot(x, y, type="h", col = rgb(color,alpha = alpha),
+      # plot the impulses
+      # graphics::plot(x, y, type="h", col = rgb(color,alpha = alpha),
       #                ylab = ylab, xlab = "")
       ggplot2::ggplot(tb, aes(x=Outcome, xend=Outcome, y=0, yend=Value)) +
         ggplot2::geom_segment(color=color(), alpha = alpha) +
@@ -435,7 +470,7 @@ Plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
 }
 
 #' @export
-Mean.RVResults <- function(self){
+mean.RVResults <- function(self){
  if (get_dimesion(self) == 0){
    return(mean(self$results))
  } else if (get_dimesion(x) > 0){
@@ -445,7 +480,7 @@ Mean.RVResults <- function(self){
 }
 
 #' @export
-Var.RVResults <- function(self){
+var.RVResults <- function(self){
   if (get_dimesion(self) == 0){
     return(var(self$results))
   } else if (get_dimesion(x) > 0){
@@ -455,7 +490,7 @@ Var.RVResults <- function(self){
 }
 
 #' @export
-SD.RVResults <- function(self){
+sd.RVResults <- function(self){
   if (get_dimesion(self) == 0){
     return(sd(self$results))
   } else if (get_dimesion(x) > 0){

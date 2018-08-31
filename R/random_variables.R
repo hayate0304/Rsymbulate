@@ -4,9 +4,9 @@
 #' 
 #'  A random variable is a function which maps an outcome of
 #'  a probability space to a number.  Simulating a random
-#'  variable is a two-step process: first, a Draw is taken
+#'  variable is a two-step process: first, a draw is taken
 #'  from the underlying probability space; then, the function
-#'  is applied to that Draw to obtain the realized value of
+#'  is applied to that draw to obtain the realized value of
 #'  the random variable.
 #'  
 #' @param probSpace (ProbabilitySpace): the underlying
@@ -15,7 +15,7 @@
 #' probability space to numbers.
 #' 
 #' @examples
-#' # a single Draw is a sequence of 0s and 1s, e.g., (0, 0, 1, 0, 1).
+#' # a single draw is a sequence of 0s and 1s, e.g., (0, 0, 1, 0, 1).
 #' P = BoxModel(c(0, 1), size=5)
 #' # X counts the number of 1s in the draw, e.g., 5
 #' X = RV(P, sum)
@@ -43,10 +43,10 @@ RV <- function(probSpace, fun = function(x) x){
 #'
 #' @examples
 #'   X = RV(Normal(0, 1))
-#'   X %>% Draw() might return -0.9, for example.
+#'   X %>% draw() might return -0.9, for example.
 #' @export
-Draw.RV <- function(self){
-  return(self$fun(Draw(self$probSpace)))
+draw.RV <- function(self){
+  return(self$fun(draw(self$probSpace)))
 }
   
 #'   Simulate n draws from probability space described by the random
@@ -55,26 +55,26 @@ Draw.RV <- function(self){
 #' @param n (int): How many draws to make.
 #' @return Results: A vector or matrix containing the simulation results.
 #' @export
-Sim.RV <- function(self, n){
+sim.RV <- function(self, n){
 
-  if (length(Draw(self)) == 1){
-    return(RVResults(replicate(n, Draw(self))))
+  if (length(draw(self)) == 1){
+    return(RVResults((replicate(n, draw(self)))))
   } else
-    return(RVResults(t(replicate(n, Draw(self)))))
+    return(RVResults(t(replicate(n, draw(self)))))
 }
 
 #' @export
-Call <- function(self, input) UseMethod("Call")
+call <- function(self, input) UseMethod("call")
 #' @export
-Call.default <- function(self, input) stop("Could not perform the function")
+call.default <- function(self, input) stop("Could not perform the function")
 
 #' @export
-Call.RV <- function(self, input){
+call.RV <- function(self, input){
   cat("Warning: Calling an RV as a function simply applies the function that defines
 the RV to the input, regardless of whether the input is a valid outcome in
 the underlying probability space.\n")
 
-  dummy_draw = Draw(self$probSpace)
+  dummy_draw = draw(self$probSpace)
 
   # paste("Dummy: ", dummy_draw)
   # R doesn't have scalar type
@@ -115,15 +115,22 @@ check_same_probSpace.RV <- function(self, other){
     check_same(self$probSpace, other$probSpace)
 }
 
+#' @export
+apply <- function(self, ...) UseMethod("apply")
+#' @export
+apply.default <- base::apply
+# add a ... argument to apply.default to allow passing of package checks:
+formals(apply.default) <- c(formals(apply.default), alist(... = ))
+
 #' Transform a random variable by a function.
 #'
-#' @param func: function to Apply to the random variable
+#' @param func: function to apply to the random variable
 #'   
 #' @examples
 #' X = RV(Exponential(1))
-#' Y = X.Apply(log)
+#' Y = X.apply(log)
 #'
-#' Note: For most standard functions, you can Apply the function to
+#' Note: For most standard functions, you can apply the function to
 #' the random variable directly. For example, in the example above,
 #' Y = log(X) would have been equivalent and more readable.
 #'
@@ -132,11 +139,11 @@ check_same_probSpace.RV <- function(self, other){
 #' @examples 
 #' g <- function(x)
 #'   return log(x ** 2)
-#' Y = X %>% Apply(g)
+#' Y = X %>% apply(g)
 #' @export
-Apply.RV <- function(self, func){
+apply.RV <- function(self, func, ...){
   f_new <- function(outcome)
-    return(func(self$fun(outcome)))
+    return(func(self$fun(outcome), ...))
 
   return(RV(self$probSpace, f_new))
 }
@@ -145,12 +152,50 @@ Apply.RV <- function(self, func){
 # To be implemented later: iter, getitem
 #-----------------------------------------
 
-# e.g., abs(X)
+#----------------------------------------------
+# For transforming 
+#----------------------------------------------
 #' @export
-Abs.RV <- function(self){
-  return(Apply.RV(self, function(x) abs(x)))
-}
+abs.RV <- function(self)
+  return(apply.RV(self, abs))
 
+#' @export
+sqrt.RV <- function(self)
+  return(apply(self, sqrt))
+
+#' @export
+exp.RV <- function(self)
+  return(apply(self, exp))
+
+#' @export
+sin.RV <- function(self)
+  return(apply(self, sin))
+
+#' @export
+cos.RV <- function(self)
+  return(apply(self, cos))
+
+#' @export
+tan.RV <- function(self)
+  return(apply(self, tan))
+
+#' @export
+factorial <- function(self) UseMethod("factorial")
+#' @export
+factorial.default <- base::factorial
+# add a ... argument to factorial.default to allow passing of package checks:
+formals(factorial.default) <- c(formals(factorial.default), alist(... = ))
+#' @export
+factorial.RV <- function(self)
+  return(apply(self, factorial))
+
+#' @export
+log.RV <- function(self, base = exp(1))
+  return(apply(self, log, base))
+
+#------------------------------------------------------------
+# Operations
+#------------------------------------------------------------
 #' @export
 `%+%` <- function(self, other) UseMethod("%+%")
 #' @export
@@ -159,20 +204,22 @@ Abs.RV <- function(self){
 `%+%.RV` <- function(self, other){
   check_same_probSpace(self, other)
   if (is_scalar(other)){
-    return(Apply.RV(self, function(x) self$fun(x) + other))
+    return(apply.RV(self, function(x) self$fun(x) + other))
   } else if (inherits(other, "RV")){
     func <- function(x){
-      self$fun(x) + other$fun(Draw(other$probSpace))
+      self$fun(x) + other$fun(draw(other$probSpace))
     }
-    return(Apply.RV(self, func))
+    return(apply.RV(self, func))
   } else
     warning("NotImplemented")
 }
 
 #' @export
-`%+%.numeric` <- function(scalar, rv){
-  #return(-1 * (`%-%.RV`(rv, scalar)))
-  return(Apply.RV(rv, function(x) `+`(scalar, rv$fun(x))))
+`%+%.numeric` <- function(scalar, obj){
+  if (inherits(obj, "RV")){
+    return(apply.RV(obj, function(x) `+`(scalar, obj$fun(x))))
+  } else if (inherits(obj, "Results"))
+    return(scalar + obj$results)
 }
 
 #' @export
@@ -181,45 +228,80 @@ Abs.RV <- function(self){
 `%-%.default` <- function(self, other) stop("Could not perform the operation")
 
 #' @export
-`%-%.numeric` <- function(scalar, rv){
-  #return(-1 * (`%-%.RV`(rv, scalar)))
-  return(Apply.RV(rv, function(x) `-`(scalar, rv$fun(x))))
+`%-%.numeric` <- function(scalar, obj){
+  if (inherits(obj, "RV")){
+    return(apply.RV(obj, function(x) `-`(scalar, obj$fun(x))))
+  } else if (inherits(obj, "Results"))
+    return(scalar - obj$results)
 }
 
 #' @export
 `%-%.RV` <- function(self, other){
   check_same_probSpace(self, other)
 
-  if (inherits(self, "RV"))
+  if (inherits(self, "RV")){
     if (is_scalar(other)){
-      return(Apply.RV(self, function(x) self$fun(x) - other))
+      return(apply.RV(self, function(x) self$fun(x) - other))
     } else if (inherits(other, "RV")){
       func <- function(x){
-        self$fun(x) - other$fun(Draw(other$probSpace))
+        self$fun(x) - other$fun(draw(other$probSpace))
       }
-      return(Apply.RV(self, func))
+      return(apply.RV(self, func))
     } else
       warning("NotImplemented")
+  } 
+}
+
+#' @export
+`%/%` <- function(self, other) UseMethod("%/%")
+#' @export
+`%/%.default` <- function(self, other) stop("Could not perform the operation")
+
+#' @export
+`%/%.numeric` <- function(scalar, obj){
+  if (inherits(obj, "RV")){
+    return(apply.RV(obj, function(x) `/`(scalar, obj$fun(x))))
+  } else if (inherits(obj, "Results"))
+    return(scalar / obj$results)
+}
+
+#' @export
+`%/%.RV` <- function(self, other){
+  check_same_probSpace(self, other)
+  
+  if (inherits(self, "RV")){
+    if (is_scalar(other)){
+      return(apply.RV(self, function(x) self$fun(x) / other))
+    } else if (inherits(other, "RV")){
+      func <- function(x){
+        self$fun(x) / other$fun(draw(other$probSpace))
+      }
+      return(apply.RV(self, func))
+    } else
+      warning("NotImplemented")
+  } 
 }
 
 #' @export
 `%*%.RV` <- function(self, other){
   check_same_probSpace(self, other)
   if (is_scalar(other)){
-    return(Apply.RV(self, function(x) self$fun(x) * other))
+    return(apply.RV(self, function(x) self$fun(x) * other))
   } else if (inherits(other, "RV")){
     func <- function(x){
-      self$fun(x) + other$fun(Draw(other$probSpace))
+      self$fun(x) * other$fun(draw(other$probSpace))
     }
-    return(Apply.RV(self, func))
+    return(apply.RV(self, func))
   } else
     warning("NotImplemented")
 }
 
 #' @export
-`%*%.numeric` <- function(scalar, rv){
-  #return(-1 * (`%-%.RV`(rv, scalar)))
-  return(Apply.RV(rv, function(x) `*`(scalar, rv$fun(x))))
+`%*%.numeric` <- function(scalar, obj){
+  if (inherits(obj, "RV")){
+    return(apply.RV(obj, function(x) `*`(scalar, obj$fun(x))))
+  } else if (inherits(obj, "Results"))
+    return(scalar * obj$results)
 }
 
 #' @export
