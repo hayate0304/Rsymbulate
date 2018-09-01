@@ -2,7 +2,7 @@
 % Please edit documentation in R/distributions.R
 \name{Uniform}
 \alias{Uniform}
-\title{Defines a probability space for a uniform distribution.}
+\title{Defines a probability space for an uniform distribution.}
 \usage{
 Uniform(a = 0, b = 1)
 }
@@ -12,5 +12,5 @@ Uniform(a = 0, b = 1)
 \item{b}{(double): upper bound for possible values}
 }
 \description{
-Defines a probability space for a uniform distribution.
+Defines a probability space for an uniform distribution.
 }

@@ -39,18 +39,38 @@ Binomial <- function(n, p){
 draw.Binomial <- function(self)
   return(rbinom(1, self$n, self$p))
 
+#' Defines a probability space for a Poisson distribution.
+#' 
+#' @param lam (float): rate parameter for the Poisson distribution
+#' @export
+Poisson <- function(lam){
+  if (lam < 0)
+    stop("Lambda (lam) must be greater than 0")
+  
+  me <- list(lam = lam)
+  
+  class(me) <- c(class(me), "Poisson", "Distribution", "ProbabilitySpace")
+  return(me)
+}
+
+#' A function that takes no arguments and
+#' returns a single draw from the Poisson distribution.
+#' @export
+draw.Poisson <- function(self)
+  return(rpois(1, self$lam))
+
 #' Defines a probability space for a discrete uniform distribution.
 #' 
 #' @param a (int): lower bound for possible values
 #' @param b (int): upper bound for possible values
 #' @export
-DiscreteUniform <- function(self, a = 0, b = 1){
+DiscreteUniform <- function(a = 0, b = 1){
   if (a >= b)
     stop("b cannot be less than or equal to a")
 
   me <- list(a = a,
              b = b,
-             xlim = c(a,b))
+             xlim = c(a, b))
   class(me) <- c(class(me), "DiscreteUniform", "Distribution", "ProbabilitySpace")
   return(me)
 }
@@ -61,7 +81,7 @@ DiscreteUniform <- function(self, a = 0, b = 1){
 draw.DiscreteUniform <- function(self)
   return(sample(self$a : self$b, 1))
 
-#' Defines a probability space for a uniform distribution.
+#' Defines a probability space for an uniform distribution.
 #'
 #' @param a (double): lower bound for possible values
 #' @param b (double): upper bound for possible values
@@ -118,4 +138,42 @@ Normal <- function(mean=0.0, sd=1.0, var=NULL){
 #' @export
 draw.Normal <- function(self)
   return(rnorm(1, self$mean, self$scale))
+
+#' Defines a probability space for an exponential distribution.
+#' Only one of scale or rate should be set. (The scale is the
+#' inverse of the rate.)
+#'
+#' @param scale double; scale parameter for gamma distribution
+#' (often symbolized beta = 1 / lambda)
+#' @param rate double; rate parameter for gamma distribution
+#' (often symbolized lambda)
+#' @export
+Exponential <- function(rate = 1.0, scale = NULL){
+  if (identical(scale, NULL)){
+    if (rate < 0)
+      stop("rate must be positive")
+  } else {
+    if (scale < 0)
+      stop("scale must be positive")
+  }
+  
+  me <- list(rate = rate,
+             scale = scale)
+  class(me) <- c(class(me), "Exponential", "Distribution", "ProbabilitySpace")
+  return(me)
+}
+
+#' A function that takes no arguments and
+#' returns a single draw from the Exponential distribution.
+#' @export
+draw.Exponential <- function(self){
+  if (identical(self$scale, NULL)){
+    return(rexp(1, self$rate))
+  } else 
+    return(rexp(1, 1 / self$scale))
+}
+  
+
+
+
 

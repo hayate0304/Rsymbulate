@@ -4,7 +4,7 @@
 \alias{DiscreteUniform}
 \title{Defines a probability space for a discrete uniform distribution.}
 \usage{
-DiscreteUniform(self, a = 0, b = 1)
+DiscreteUniform(a = 0, b = 1)
 }
 \arguments{
 \item{a}{(int): lower bound for possible values}

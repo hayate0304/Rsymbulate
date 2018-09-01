@@ -40,6 +40,10 @@ apply.Results <- function(self, fun, ...){
 }
 
 #' @export
+print.Results <- function(self)
+  print(self$results)
+
+#' @export
 get <- function(self, i) UseMethod("get")
 #' @export
 get.default <- function(self, i) stop("Could not perform the function")
@@ -52,11 +56,7 @@ get.Results <- function(self, i){
 }
   
 #' @export
-len <- function(self) UseMethod("len")
-#' @export
-len.default <- function(self) stop("Could not perform the function")
-#' @export
-len.Results <- function(self){
+length.Results <- function(self){
   if (is.matrix(self$results)){
     return(dim(self$results)[1])
   } else 
@@ -354,14 +354,16 @@ RVResults <- function(results){
 
 #' @export
 plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
-                            jitter=FALSE, bins=NULL, add = FALSE){
+                            jitter=FALSE, bins=NULL){
 
   dim <- get_dimesion(self)
 
   # If RVResults is vector
   if (dim == 0){
     tb <- tabulate(self)
+    #print(tb)
     heights <- tb$Value
+    #print(heights)
     discrete <- is_discrete(heights)
     #print(paste("Dis: ", discrete))
 

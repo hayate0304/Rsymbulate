@@ -2,7 +2,7 @@
 % Please edit documentation in R/results.R
 \name{tabulate.Results}
 \alias{tabulate.Results}
-\title{counts up how much of each outcome there were.}
+\title{Counts up how much of each outcome there were.}
 \usage{
 \method{tabulate}{Results}(self, normalize = FALSE)
 }
@@ -16,5 +16,5 @@ Data frame: A data frame with each of the observed
 outcomes and their frequencies.
 }
 \description{
-counts up how much of each outcome there were.
+Counts up how much of each outcome there were.
 }

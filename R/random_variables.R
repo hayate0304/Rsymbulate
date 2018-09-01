@@ -196,30 +196,45 @@ log.RV <- function(self, base = exp(1))
 #------------------------------------------------------------
 # Operations
 #------------------------------------------------------------
+
+operation_factory <- function(self, op){
+  
+  op_fun <- function(self, other){
+    check_same_probSpace(self, other)
+    if (is_scalar(other)){
+      return(apply(self, function(x) op(x, other)))
+    } else if (inherits(other, "RV")){
+      fun <- function(outcome){
+        a <- self$fun(outcome)
+        #print(paste("Here a: ", a))
+        b <- other$fun(outcome)
+        if (length(a) == length(b)){
+          return(op(a, b))
+        } else 
+          stop("Could not perform operation.")
+      }
+      
+      return(RV(self$probSpace, fun))
+    } else 
+      return("NotImplemented")
+  }
+}
+
 #' @export
 `%+%` <- function(self, other) UseMethod("%+%")
 #' @export
 `%+%.default` <- function(self, other) stop("Could not perform the operation")
+
+# e.g., X + Y or X + 3
 #' @export
 `%+%.RV` <- function(self, other){
-  check_same_probSpace(self, other)
-  if (is_scalar(other)){
-    return(apply.RV(self, function(x) self$fun(x) + other))
-  } else if (inherits(other, "RV")){
-    func <- function(x){
-      self$fun(x) + other$fun(draw(other$probSpace))
-    }
-    return(apply.RV(self, func))
-  } else
-    warning("NotImplemented")
+  op_fun <- operation_factory(self, function(x, y) x + y)
+  return(op_fun(self, other))
 }
-
+# e.g., 3 + X
 #' @export
 `%+%.numeric` <- function(scalar, obj){
-  if (inherits(obj, "RV")){
-    return(apply.RV(obj, function(x) `+`(scalar, obj$fun(x))))
-  } else if (inherits(obj, "Results"))
-    return(scalar + obj$results)
+  return(obj %+% scalar)
 }
 
 #' @export
@@ -227,29 +242,17 @@ log.RV <- function(self, base = exp(1))
 #' @export
 `%-%.default` <- function(self, other) stop("Could not perform the operation")
 
+# e.g., 3 - X
 #' @export
 `%-%.numeric` <- function(scalar, obj){
-  if (inherits(obj, "RV")){
-    return(apply.RV(obj, function(x) `-`(scalar, obj$fun(x))))
-  } else if (inherits(obj, "Results"))
-    return(scalar - obj$results)
+  return(-1 %*% (obj %-% scalar))
 }
 
+# e.g., X + Y or X + 3
 #' @export
 `%-%.RV` <- function(self, other){
-  check_same_probSpace(self, other)
-  # print("Here")
-  if (inherits(self, "RV")){
-    if (is_scalar(other)){
-      return(apply.RV(self, function(x) self$fun(x) - other))
-    } else if (inherits(other, "RV")){
-      func <- function(x){
-        self$fun(x) - other$fun(draw(other$probSpace))
-      }
-      return(apply.RV(self, func))
-    } else
-      warning("NotImplemented")
-  } 
+  op_fun <- operation_factory(self, function(x, y) x - y)
+  return(op_fun(self, other))
 }
 
 #' @export
@@ -257,51 +260,45 @@ log.RV <- function(self, base = exp(1))
 #' @export
 `%/%.default` <- function(self, other) stop("Could not perform the operation")
 
+# e.g., 2 / X
 #' @export
 `%/%.numeric` <- function(scalar, obj){
-  if (inherits(obj, "RV")){
-    return(apply.RV(obj, function(x) `/`(scalar, obj$fun(x))))
-  } else if (inherits(obj, "Results"))
-    return(scalar / obj$results)
+  op_fun <- operation_factory(self, function(x, y) y / x)
+  return(op_fun(obj, scalar))
 }
 
+# e.g., X / Y or X / 2
 #' @export
 `%/%.RV` <- function(self, other){
-  check_same_probSpace(self, other)
-  
-  if (inherits(self, "RV")){
-    if (is_scalar(other)){
-      return(apply.RV(self, function(x) self$fun(x) / other))
-    } else if (inherits(other, "RV")){
-      func <- function(x){
-        self$fun(x) / other$fun(draw(other$probSpace))
-      }
-      return(apply.RV(self, func))
-    } else
-      warning("NotImplemented")
-  } 
+  op_fun <- operation_factory(self, function(x, y) x / y)
+  return(op_fun(self, other))
 }
 
+# e.g., X * Y or X * 2
 #' @export
 `%*%.RV` <- function(self, other){
-  check_same_probSpace(self, other)
-  if (is_scalar(other)){
-    return(apply.RV(self, function(x) self$fun(x) * other))
-  } else if (inherits(other, "RV")){
-    func <- function(x){
-      self$fun(x) * other$fun(draw(other$probSpace))
-    }
-    return(apply.RV(self, func))
-  } else
-    warning("NotImplemented")
+  op_fun <- operation_factory(self, function(x, y) x * y)
+  return(op_fun(self, other))
 }
 
+# e.g., 2 * X
 #' @export
 `%*%.numeric` <- function(scalar, obj){
-  if (inherits(obj, "RV")){
-    return(apply.RV(obj, function(x) `*`(scalar, obj$fun(x))))
-  } else if (inherits(obj, "Results"))
-    return(scalar * obj$results)
+  return(obj %*% scalar)
+}
+
+# e.g., X ^ Y or X ^ 2
+#' @export
+`%^%.RV` <- function(self, other){
+  op_fun <- operation_factory(self, function(x, y) x ^ y)
+  return(op_fun(self, other))
+}
+
+#e.g., 2 ^ X
+#' @export
+`%^%.numeric` <- function(scalar, obj){
+  op_fun <- operation_factory(self, function(x, y) y ^ x)
+  return(op_fun(self, other))
 }
 
 #' @export

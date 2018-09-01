@@ -64,7 +64,7 @@ check_same.ProbabilitySpace <- function(self, other){
 #' @export
 `%*%` <- function(self, other) UseMethod("%*%")
 #' @export
-`%*%.default` <- function(self, other) stop("Could not perform the operation")
+`%*%.default` <- base::`%*%`
 
 #' @export
 `%*%.ProbabilitySpace` <- function(self, other){
