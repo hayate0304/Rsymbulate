@@ -1,4 +1,4 @@
-#setwd("C:/Users/lucki/Desktop/Frost Research/Rsymbulate/symbulate")
+#setwd("C:/Users/lucki/Desktop/Frost Research/Rsymbulate/R")
 #setwd("D:/Desktop/Frost Research/Rsymbulate")
 
 # source("probability_space.R")

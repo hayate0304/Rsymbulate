@@ -1,41 +1,100 @@
 
-
-#' Defines a random variable.
-#' 
+#'  @title Defines a random variable.
+#'
 #'  A random variable is a function which maps an outcome of
 #'  a probability space to a number.  Simulating a random
 #'  variable is a two-step process: first, a draw is taken
 #'  from the underlying probability space; then, the function
 #'  is applied to that draw to obtain the realized value of
 #'  the random variable.
-#'  
+#'
 #' @param probSpace (ProbabilitySpace): the underlying
 #' probability space of the random variable.
-#' @param fun (function, optional):  a function that maps draws from the 
+#' @param fun (function, optional):  a function that maps draws from the
 #' probability space to numbers.
-#' 
+#'
 #' @examples
 #' # a single draw is a sequence of 0s and 1s, e.g., (0, 0, 1, 0, 1).
 #' P = BoxModel(c(0, 1), size=5)
 #' # X counts the number of 1s in the draw, e.g., 5
 #' X = RV(P, sum)
-#' 
+#'
 #' # the function is the identity, so Y has a Normal(0, 1) distribution
 #' Y = RV(Normal(0, 1)
-#' 
+#'
 #' # a single draw from BivariateNormal is a tuple of two numbers
 #' P = BivariateNormal()
 #' # Z is the smaller of the two numbers
 #' Z = RV(P, min)
-#' 
+#'
 #' @return A RV
 #' @export
 RV <- function(probSpace, fun = function(x) x){
-  me <- list(probSpace = probSpace,
-             fun = fun)
+  temp_p <- probSpace
 
-  class(me) <- append(class(me), "RV")
-  return(me)
+  if (length(temp_p) == 3){
+    # Count number of probSpace intilize a list easier
+    i <- 2
+    while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(ps))){
+      if (length(temp_p$self) == 3){
+        temp_p = temp_p$self
+      } else
+        break
+      i <- i + 1
+    }
+
+    temp_p <- probSpace
+    #print(paste("i here: ", i))
+    vect_of_probSpace <- vector("list", i)
+    vect_of_rv <- vector("list", i)
+
+    #print("Starting inside")
+    len_to_input <- i
+    ## If there are multiples probSpace created by %*%
+    ## This is the technique to get slicing.
+    ## If first probSpace$self passed in has length 3 means it was created by %*%
+    while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(ps))){
+      # print("Inside 1")
+      # print("Other")
+      # print(temp_p$other)
+
+      vect_of_probSpace[[len_to_input]] <- temp_p$other
+      len_to_input <- len_to_input - 1
+
+      # print("Self")
+      # print(temp_p$self)
+      if (length(temp_p$self) == 3){
+        # Set temp_p = temp_p$self so that the loop can continue
+        # if there are more than 3 probSpace such as: Normal(0, 1) ^ 5
+        #print("Next loop")
+        temp_p = temp_p$self
+      } else
+        break
+
+    }
+
+    vect_of_probSpace[[len_to_input]] <- temp_p$self
+    #print(paste("Print 2: ", vect_of_probSpace[[len_to_input]]))
+    #print(paste("Length: ", length(vect_of_probSpace)))
+
+    for (i in 1:length(vect_of_probSpace)){
+      vect_of_rv[[i]] <- list(probSpace = vect_of_probSpace[[i]],
+                            fun = fun)
+      class(vect_of_rv[[i]]) <- append(class(vect_of_rv[[i]]), "RV")
+    }
+
+    vect_of_rv[["probSpace"]] <- probSpace
+    vect_of_rv[["fun"]] <- fun
+    class(vect_of_rv) <- append(class(vect_of_rv), "RV")
+    return(vect_of_rv)
+  } else {
+    me <- list(probSpace = probSpace,
+               fun = fun)
+
+    class(me) <- append(class(me), "RV")
+    return(me)
+  }
+
 }
 
 #' A function that takes no arguments and returns a single
@@ -46,9 +105,10 @@ RV <- function(probSpace, fun = function(x) x){
 #'   X %>% draw() might return -0.9, for example.
 #' @export
 draw.RV <- function(self){
+  # self could be a list of probSpace or just 1 probSpace
   return(self$fun(draw(self$probSpace)))
 }
-  
+
 #'   Simulate n draws from probability space described by the random
 #'   variable.
 #'
@@ -125,7 +185,7 @@ formals(apply.default) <- c(formals(apply.default), alist(... = ))
 #' Transform a random variable by a function.
 #'
 #' @param func: function to apply to the random variable
-#'   
+#'
 #' @examples
 #' X = RV(Exponential(1))
 #' Y = X.apply(log)
@@ -136,7 +196,7 @@ formals(apply.default) <- c(formals(apply.default), alist(... = ))
 #'
 #' User defined functions can also be applied.
 #'
-#' @examples 
+#' @examples
 #' g <- function(x)
 #'   return log(x ** 2)
 #' Y = X %>% apply(g)
@@ -153,7 +213,7 @@ apply.RV <- function(self, func, ...){
 #-----------------------------------------
 
 #----------------------------------------------
-# For transforming 
+# For transforming
 #----------------------------------------------
 #' @export
 abs.RV <- function(self)
@@ -198,7 +258,7 @@ log.RV <- function(self, base = exp(1))
 #------------------------------------------------------------
 
 operation_factory <- function(self, op){
-  
+
   op_fun <- function(self, other){
     check_same_probSpace(self, other)
     if (is_scalar(other)){
@@ -210,12 +270,12 @@ operation_factory <- function(self, op){
         b <- other$fun(outcome)
         if (length(a) == length(b)){
           return(op(a, b))
-        } else 
+        } else
           stop("Could not perform operation.")
       }
-      
+
       return(RV(self$probSpace, fun))
-    } else 
+    } else
       return("NotImplemented")
   }
 }
@@ -314,4 +374,163 @@ operation_factory <- function(self, op){
     return(RV(self$probSpace, fun))
   } else
     stop("Joint distributions are only defined for RVs.")
+}
+
+#------------------------------------------------------------
+## The following operations all return Events
+## (Events are used to define conditional distributions)
+#------------------------------------------------------------
+
+# e.g., X < 3
+#' @export
+`%<%` <- function(self, other) UseMethod("%<%")
+#' @export
+`%<%.default` <- function(self, other) stop("Could not perform the operation")
+#' @export
+`%<%.RV` <- function(self, other){
+  if (is_scalar(other)){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) < other))
+  } else if (inherits(other, "RV")){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) < other$fun(x)))
+  } else
+    stop("NotImplementedError")
+}
+
+# e.g., X <= 3
+#' @export
+`%<=%` <- function(self, other) UseMethod("%<=%")
+#' @export
+`%<=%.default` <- function(self, other) stop("Could not perform the operation")
+#' @export
+`%<=%.RV` <- function(self, other){
+  if (is_scalar(other)){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) <= other))
+  } else if (inherits(other, "RV")){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) <= other$fun(x)))
+  } else
+    stop("NotImplementedError")
+}
+
+# e.g., X > 3
+#' @export
+`%>%` <- function(self, other) UseMethod("%>%")
+#' @export
+`%>%.default` <- function(self, other) stop("Could not perform the operation")
+#' @export
+`%>%.RV` <- function(self, other){
+  if (is_scalar(other)){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) > other))
+  } else if (inherits(other, "RV")){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) > other$fun(x)))
+  } else
+    stop("NotImplementedError")
+}
+
+# e.g., X >= 3
+#' @export
+`%>=%` <- function(self, other) UseMethod("%>=%")
+#' @export
+`%>=%.default` <- function(self, other) stop("Could not perform the operation")
+#' @export
+`%>=%.RV` <- function(self, other){
+  if (is_scalar(other)){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) >= other))
+  } else if (inherits(other, "RV")){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) >= other$fun(x)))
+  } else
+    stop("NotImplementedError")
+}
+
+# e.g., X == 3
+#' @export
+`%==%` <- function(self, other) UseMethod("%==%")
+#' @export
+`%==%.default` <- function(self, other) stop("Could not perform the operation")
+#' @export
+`%==%.RV` <- function(self, other){
+  if (is_scalar(other)){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) == other))
+  } else if (inherits(other, "RV")){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) == other$fun(x)))
+  } else
+    stop("NotImplementedError")
+}
+
+# e.g., X != 3
+#' @export
+`%!=%` <- function(self, other) UseMethod("%!=%")
+#' @export
+`%!=%.default` <- function(self, other) stop("Could not perform the operation")
+#' @export
+`%!=%.RV` <- function(self, other){
+  if (is_scalar(other)){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) != other))
+  } else if (inherits(other, "RV")){
+    return(Event(self$probSpace,
+                 function(x) self$fun(x) != other$fun(x)))
+  } else
+    stop("NotImplementedError")
+}
+
+# Define conditional distribution of random variable.
+# e.g., X | (X > 3)
+#' @export
+`%|%` <- function(self, condition_event) UseMethod("%|%")
+#' @export
+`%|%.default` <- function(self, condition_event) stop("Could not perform the operation")
+#' @export
+`%|%.RV` <- function(self, condition_event){
+  check_same_probSpace(self, condition_event)
+
+  if (inherits(condition_event, "Event")){
+    return(RVConditional(self, condition_event))
+  } else
+    stop("NotImplementedError")
+}
+
+#' @title Defines a random variable conditional on an event.
+#'
+#' @description RVConditionals are typically produced when you condition a
+#' RV on an Event object.
+#'
+#' @param random_variable (RV): the random variable whose conditional
+#' distribution is desired
+#' @param condition_event (Event): the event to condition on
+#'
+#' @examples
+#' X, Y = RV(Binomial(10, 0.4) ** 2)
+#' (X | (X + Y == 5)) %>% draw() # returns a value between 0 and 5.
+
+RVConditional <- function(RV){
+  attribute <- list(probSpace = RV$probSpace,
+                    fun = RV$fun,
+                    condition_event = condition_event)
+  class(attribute) <- c(class(attribute), "RVConditional", "RV")
+  return(attribute)
+}
+
+#' A function that takes no arguments and returns a value from
+#' the conditional distribution of the random variable.
+#'
+#' @examples
+#' X, Y = RV(Binomial(10, 0.4) ** 2)
+#' (X | (X + Y == 5)).draw() might return a value of 4, for example.
+draw.RVConditional <- function(self) {
+  probSpace <- self$probSpace
+  while (TRUE){
+    outcome <- draw(probSpace)
+    if ((self$condition_event)$fun(outcome))
+      return(self$fun(outcome))
+  }
 }

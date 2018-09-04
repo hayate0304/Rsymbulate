@@ -2,7 +2,7 @@
 % Please edit documentation in R/random_variables.R
 \name{RV}
 \alias{RV}
-\title{Defines a random variable.}
+\title{@title Defines a random variable.}
 \usage{
 RV(probSpace, fun = function(x) x)
 }
@@ -10,7 +10,7 @@ RV(probSpace, fun = function(x) x)
 \item{probSpace}{(ProbabilitySpace): the underlying
 probability space of the random variable.}
 
-\item{fun}{(function, optional):  a function that maps draws from the 
+\item{fun}{(function, optional):  a function that maps draws from the
 probability space to numbers.}
 }
 \value{

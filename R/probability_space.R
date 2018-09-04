@@ -9,13 +9,15 @@
 
 #' Defines a probability space.
 #'
-#' @param draw function: A function explaining how to draw one 
+#' @param draw function: A function explaining how to draw one
 #' outcome from the probability space.
 #' @return ProbabilitySpace
 #' @export
-ProbabilitySpace <- function(DrawFunc){
+ProbabilitySpace <- function(DrawFunc, self, other){
   me <- list(
-    draw = DrawFunc
+    draw = DrawFunc,
+    self = self,
+    other = other
   )
 
   # Set name of the class
@@ -70,12 +72,12 @@ check_same.ProbabilitySpace <- function(self, other){
 `%*%.ProbabilitySpace` <- function(self, other){
 
   # Create function "dr" to pass to ProbabilitySpace. If I change this function's name
-  # to "draw" then R will be aborted since the function's name mess up with the method
-  # "draw" in BoxModel.
+  # to "draw" then R will be aborted since the function's name mess up with other method
+  # "draw".
   dr <- function(){
     return(c(draw(self), draw(other)))
   }
-  return(ProbabilitySpace(dr))
+  return(ProbabilitySpace(dr, self, other))
 }
 
 #' @export
@@ -102,9 +104,9 @@ check_same.ProbabilitySpace <- function(self, other){
     dr <- function(){
       return(replicate(exponent, draw(self)))
     }
-    
+
   }
-  return(ProbabilitySpace(dr))
+  return(ProbabilitySpace(dr, self, other))
 }
 
 #---------------------------------------------------------------
@@ -126,7 +128,7 @@ ArbitrarySpace <- function(){
 Event <- function(probSpace, fun){
   me <- list(probSpace = probSpace,
              fun = fun)
-  
+
   class(me) <- append(class(me), "Event")
   return(me)
 }
@@ -150,7 +152,7 @@ check_same_probSpace.Event <- function(self, other){
 #' @export
 `%&%.Event` <- function(self, other){
   check_same_probSpace(self, other)
-  
+
   if (inherits(other, "Event")){
     return(Event(self$probSpace, function(x) self$fun(x) & other$fun(x)))
   }
@@ -165,7 +167,7 @@ check_same_probSpace.Event <- function(self, other){
 #' @export
 `%|%.Event` <- function(self, other){
   check_same_probSpace(self, other)
-  
+
   if (inherits(other, "Event")){
     return(Event(self$probSpace, function(x) self$fun(x) | other$fun(x)))
   }
@@ -242,12 +244,12 @@ BoxModel <- function(box, size = 1, replace = TRUE,
   return(me)
 }
 
-#' A function that takes no arguments and returns a value(s) from the 
+#' A function that takes no arguments and returns a value(s) from the
 #' "box" argument of the BoxModel.
-#' 
-#' Based on BoxModel inputs: 
-#' Number of values returned depends on the input of the "size" 
-#' argument. 
+#'
+#' Based on BoxModel inputs:
+#' Number of values returned depends on the input of the "size"
+#' argument.
 #' Whether or not a value in the box can appear multiple times
 #' depends on the "replace" argument.
 #' If a list of probabilities is specified, values drawn will be drawn
@@ -291,7 +293,7 @@ draw.BoxModel <- function(self){
 # DeckOfCards class
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' Defines the probability space for drawing from a deck of cards.
-#' 
+#'
 #' @param size (int): How many draws to make.
 #' @param replace (bool): Sample with replacement or without?
 #' @export

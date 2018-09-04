@@ -4,10 +4,10 @@
 \alias{ProbabilitySpace}
 \title{Defines a probability space.}
 \usage{
-ProbabilitySpace(DrawFunc)
+ProbabilitySpace(DrawFunc, self, other)
 }
 \arguments{
-\item{draw}{function: A function explaining how to draw one 
+\item{draw}{function: A function explaining how to draw one
 outcome from the probability space.}
 }
 \value{

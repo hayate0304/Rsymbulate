@@ -2,15 +2,15 @@
 % Please edit documentation in R/probability_space.R
 \name{draw.BoxModel}
 \alias{draw.BoxModel}
-\title{A function that takes no arguments and returns a value(s) from the 
+\title{A function that takes no arguments and returns a value(s) from the
 "box" argument of the BoxModel.}
 \usage{
 \method{draw}{BoxModel}(self)
 }
 \description{
-Based on BoxModel inputs: 
-Number of values returned depends on the input of the "size" 
-argument. 
+Based on BoxModel inputs:
+Number of values returned depends on the input of the "size"
+argument.
 Whether or not a value in the box can appear multiple times
 depends on the "replace" argument.
 If a list of probabilities is specified, values drawn will be drawn

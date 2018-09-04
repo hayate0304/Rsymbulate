@@ -1,10 +1,10 @@
 # Data structures for storing the results of a simulation.
-# 
+#
 # This module provides data structures for storing the
 # results of a simulation, either outcomes from a
 # probability space or realizations of a random variable /
 # random process.
-# 
+#
 
 #' @import ggplot2
 #---------------------------------------------------------
@@ -19,7 +19,7 @@ Results <- function(results){
 }
 
 #' Apply a function to each outcome of a simulation.
-#' 
+#'
 #' @param fun: A function to apply to each outcome.
 #' @return Results: A Results object of the same length,
 #' where each outcome is the result of applying
@@ -31,11 +31,11 @@ apply.Results <- function(self, fun, ...){
     results <- sapply(self$results, fun, ...)
   } else
     results <- apply(self$results, 1, fun, ...)
-  
-  # Python code uses type(self) for typecasting, not sure how to do that in R so if-else is used 
+
+  # Python code uses type(self) for typecasting, not sure how to do that in R so if-else is used
   if (inherits(self, "RVResults")){
     return(RVResults(results))
-  } else 
+  } else
     return(Results(results))
 }
 
@@ -51,18 +51,18 @@ get.default <- function(self, i) stop("Could not perform the function")
 get.Results <- function(self, i){
   if (is.matrix(self$results)){
     return(self$results[, i])
-  } else 
+  } else
     return(self$results[i])
 }
-  
+
 #' @export
 length.Results <- function(self){
   if (is.matrix(self$results)){
     return(dim(self$results)[1])
-  } else 
+  } else
     return(length(self$results))
 }
-  
+
 #' @export
 tabulate <- function(self, ...) UseMethod("tabulate")
 #' @export
@@ -113,22 +113,22 @@ formals(filter.default) <- c(formals(filter.default), alist(... = ))
 #' filters the results of a simulation and
 #' returns only those outcomes that satisfy
 #' a given criterion.
-#' 
+#'
 #' @param fun (outcome -> bool): A function that
 #' takes in an outcome and returns a
 #' True / False. Only the outcomes that
 #' return True will be kept; the others
 #' will be filtered out.
-#' 
+#'
 #' @return Results: Another Results object containing
 #' only those outcomes for which the function
 #' returned True.
 #' @export
 filter.Results <- function(self, fun){
-  # Python code uses type(self) for typecasting, not sure how to do that in R so if-else is used 
+  # Python code uses type(self) for typecasting, not sure how to do that in R so if-else is used
   if (inherits(self, "RVResults")){
     return(RVResults(self$results[fun(self$results)]))
-  } else 
+  } else
     return(Results(self$results[fun(self$results)]))
 }
 
@@ -275,7 +275,7 @@ plot.Results <- function(self)
              "Then call plot() on those simulations."))
 
 #--------------------------------------------------------------------------
-# For operations
+# Operators
 #--------------------------------------------------------------------------
 #' @export
 `%-%.Results` <- function(self, scalar){
@@ -298,7 +298,7 @@ plot.Results <- function(self)
 }
 
 #--------------------------------------------------------------------------
-# stats functions
+# Stats functions
 #--------------------------------------------------------------------------
 #' @export
 mean.Results <- function(self)
@@ -340,6 +340,37 @@ sd.Results <- function(self)
              "a RV on your probability space and simulate it ",
              "Then call sd() on those simulations."))
 
+#' @export
+cov <- function(self) UseMethod("cov")
+#' @export
+cov.default <- stats::cov
+
+# Add a ... argument to sd.default to allow passing of package checks:
+formals(cov.default) <- c(formals(cov.default), alist(... = ))
+
+#' @export
+cov.Results <- function(self)
+  stop(paste("You can only call cov() on simulations of ",
+             "random variables (RV), but you simulated from ",
+             "a probability space. You must first define ",
+             "a RV on your probability space and simulate it ",
+             "Then call cov() on those simulations."))
+
+#' @export
+cor <- function(self) UseMethod("cor")
+#' @export
+cor.default <- stats::cor
+
+# Add a ... argument to sd.default to allow passing of package checks:
+formals(cor.default) <- c(formals(cor.default), alist(... = ))
+
+#' @export
+cor.Results <- function(self)
+  stop(paste("You can only call cor() on simulations of ",
+             "random variables (RV), but you simulated from ",
+             "a probability space. You must first define ",
+             "a RV on your probability space and simulate it ",
+             "Then call cor() on those simulations."))
 
 #---------------------------------------------------------
 #             RVResults Class
@@ -396,11 +427,12 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
           labs(y=ylab, x="")
       } else {
         if (normalize){
-          hist <- ggplot2::geom_histogram(bins = bins, fill = color(), ggplot2::aes(y=..density..), alpha = alpha)
+          hist <- ggplot2::geom_histogram(bins = bins, fill = color(), ggplot2::aes(y=..density..),
+                                          alpha = alpha)
         }else{
           hist <- ggplot2::geom_histogram(bins = bins, fill = color(), alpha = alpha)
         }
-        
+
         ggplot2::ggplot() + ggplot2::aes(self$results) +
           hist +
           labs(y=ylab, x="")
@@ -475,11 +507,15 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
   }
 }
 
+#--------------------------------------------------------------------------
+# Stats functions
+#--------------------------------------------------------------------------
+
 #' @export
 mean.RVResults <- function(self){
  if (get_dimesion(self) == 0){
    return(mean(self$results))
- } else if (get_dimesion(x) > 0){
+ } else if (get_dimesion(self) > 0){
    return(apply(self$results, 1, mean))
  } else
    stop("I don't know how to take the mean of these values.")
@@ -489,7 +525,7 @@ mean.RVResults <- function(self){
 var.RVResults <- function(self){
   if (get_dimesion(self) == 0){
     return(var(self$results))
-  } else if (get_dimesion(x) > 0){
+  } else if (get_dimesion(self) > 0){
     return(apply(self$results, 1, var))
   } else
     stop("I don't know how to take the variance of these values.")
@@ -499,9 +535,24 @@ var.RVResults <- function(self){
 sd.RVResults <- function(self){
   if (get_dimesion(self) == 0){
     return(sd(self$results))
-  } else if (get_dimesion(x) > 0){
+  } else if (get_dimesion(self) > 0){
     return(apply(self$results, 1, sd))
   } else
     stop("I don't know how to take the standard deviation of these values.")
 }
 
+#' @export
+cov.RVResults <- function(self){
+  if (get_dimesion(self) > 0){
+    return(cov(self$results))
+  } else
+    stop("Covariance requires that the simulation results have consistent dimension.")
+}
+
+#' @export
+cor.RVResults <- function(self){
+  if (get_dimesion(self) > 0){
+    return(cor(self$results))
+  } else
+    stop("Correlation requires that the simulation results have consistent dimension.")
+}
