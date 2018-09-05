@@ -33,60 +33,78 @@ RV <- function(probSpace, fun = function(x) x){
   temp_p <- probSpace
 
   if (length(temp_p) == 3){
-    # Count number of probSpace intilize a list easier
-    i <- 2
-    while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(ps))){
-      if (length(temp_p$self) == 3){
-        temp_p = temp_p$self
-      } else
-        break
-      i <- i + 1
+    if (!is.numeric(temp_p$other)){
+      # Count number of probSpace intilize a list easier
+      i <- 2
+      while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(ps))){
+        if (length(temp_p$self) == 3){
+          temp_p = temp_p$self
+        } else
+          break
+        i <- i + 1
+      }
+
+      temp_p <- probSpace
+      #print(paste("i here: ", i))
+      vect_of_probSpace <- vector("list", i)
+      vect_of_rv <- vector("list", i)
+
+      #print("Starting inside")
+      len_to_input <- i
+      ## If there are multiples probSpace created by %*%
+      ## This is the technique to get slicing.
+      ## If first probSpace$self passed in has length 3 means it was created by %*%
+      while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(ps))){
+        # print("Inside 1")
+        # print("Other")
+        # print(temp_p$other)
+
+        vect_of_probSpace[[len_to_input]] <- temp_p$other
+        len_to_input <- len_to_input - 1
+
+        # print("Self")
+        # print(temp_p$self)
+        if (length(temp_p$self) == 3){
+          # Set temp_p = temp_p$self so that the loop can continue
+          # if there are more than 3 probSpace such as: Normal(0, 1) ^ 5
+          #print("Next loop")
+          temp_p = temp_p$self
+        } else
+          break
+
+      }
+
+      vect_of_probSpace[[len_to_input]] <- temp_p$self
+      #print(paste("Print 2: ", vect_of_probSpace[[len_to_input]]))
+      #print(paste("Length: ", length(vect_of_probSpace)))
+
+      for (i in 1:length(vect_of_probSpace)){
+        vect_of_rv[[i]] <- list(probSpace = vect_of_probSpace[[i]],
+                                fun = fun)
+        class(vect_of_rv[[i]]) <- append(class(vect_of_rv[[i]]), "RV")
+      }
+
+      vect_of_rv[["probSpace"]] <- probSpace
+      vect_of_rv[["fun"]] <- fun
+      class(vect_of_rv) <- append(class(vect_of_rv), "RV")
+      return(vect_of_rv)
+    } else {
+      vect_of_probSpace <- vector("list", temp_p$other)
+      vect_of_rv <- vector("list", temp_p$other)
+
+      for (i in 1:length(vect_of_probSpace)){
+        vect_of_probSpace[[i]] <- temp_p$self
+        vect_of_rv[[i]] <- list(probSpace = vect_of_probSpace[[i]],
+                                fun = fun)
+        class(vect_of_rv[[i]]) <- append(class(vect_of_rv[[i]]), "RV")
+      }
+
+      vect_of_rv[["probSpace"]] <- probSpace
+      vect_of_rv[["fun"]] <- fun
+      class(vect_of_rv) <- append(class(vect_of_rv), "RV")
+      return(vect_of_rv)
     }
 
-    temp_p <- probSpace
-    #print(paste("i here: ", i))
-    vect_of_probSpace <- vector("list", i)
-    vect_of_rv <- vector("list", i)
-
-    #print("Starting inside")
-    len_to_input <- i
-    ## If there are multiples probSpace created by %*%
-    ## This is the technique to get slicing.
-    ## If first probSpace$self passed in has length 3 means it was created by %*%
-    while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(ps))){
-      # print("Inside 1")
-      # print("Other")
-      # print(temp_p$other)
-
-      vect_of_probSpace[[len_to_input]] <- temp_p$other
-      len_to_input <- len_to_input - 1
-
-      # print("Self")
-      # print(temp_p$self)
-      if (length(temp_p$self) == 3){
-        # Set temp_p = temp_p$self so that the loop can continue
-        # if there are more than 3 probSpace such as: Normal(0, 1) ^ 5
-        #print("Next loop")
-        temp_p = temp_p$self
-      } else
-        break
-
-    }
-
-    vect_of_probSpace[[len_to_input]] <- temp_p$self
-    #print(paste("Print 2: ", vect_of_probSpace[[len_to_input]]))
-    #print(paste("Length: ", length(vect_of_probSpace)))
-
-    for (i in 1:length(vect_of_probSpace)){
-      vect_of_rv[[i]] <- list(probSpace = vect_of_probSpace[[i]],
-                            fun = fun)
-      class(vect_of_rv[[i]]) <- append(class(vect_of_rv[[i]]), "RV")
-    }
-
-    vect_of_rv[["probSpace"]] <- probSpace
-    vect_of_rv[["fun"]] <- fun
-    class(vect_of_rv) <- append(class(vect_of_rv), "RV")
-    return(vect_of_rv)
   } else {
     me <- list(probSpace = probSpace,
                fun = fun)
@@ -417,11 +435,11 @@ operation_factory <- function(self, op){
 
 # e.g., X > 3
 #' @export
-`%>%` <- function(self, other) UseMethod("%>%")
+`%>>%` <- function(self, other) UseMethod("%>>%")
 #' @export
-`%>%.default` <- function(self, other) stop("Could not perform the operation")
+`%>>%.default` <- function(self, other) stop("Could not perform the operation")
 #' @export
-`%>%.RV` <- function(self, other){
+`%>>%.RV` <- function(self, other){
   if (is_scalar(other)){
     return(Event(self$probSpace,
                  function(x) self$fun(x) > other))

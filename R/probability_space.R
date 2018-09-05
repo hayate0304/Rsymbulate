@@ -106,7 +106,7 @@ check_same.ProbabilitySpace <- function(self, other){
     }
 
   }
-  return(ProbabilitySpace(dr, self, other))
+  return(ProbabilitySpace(dr, self, exponent))
 }
 
 #---------------------------------------------------------------
