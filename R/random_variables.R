@@ -36,7 +36,7 @@ RV <- function(probSpace, fun = function(x) x){
     if (!is.numeric(temp_p$other)){
       # Count number of probSpace intilize a list easier
       i <- 2
-      while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(ps))){
+      while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(temp_p))){
         if (length(temp_p$self) == 3){
           temp_p = temp_p$self
         } else
@@ -54,7 +54,7 @@ RV <- function(probSpace, fun = function(x) x){
       ## If there are multiples probSpace created by %*%
       ## This is the technique to get slicing.
       ## If first probSpace$self passed in has length 3 means it was created by %*%
-      while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(ps))){
+      while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(temp_p))){
         # print("Inside 1")
         # print("Other")
         # print(temp_p$other)
