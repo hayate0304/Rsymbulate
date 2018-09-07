@@ -13,7 +13,7 @@
 #' outcome from the probability space.
 #' @return ProbabilitySpace
 #' @export
-ProbabilitySpace <- function(DrawFunc, self, other){
+ProbabilitySpace <- function(DrawFunc, self = NULL, other = NULL){
   me <- list(
     draw = DrawFunc,
     self = self,
@@ -56,7 +56,11 @@ sim.ProbabilitySpace <- function(self, n){
 check_same <- function(self, other)  UseMethod("check_same")
 check_same.default <- function(self, other)  stop("Could not perform the function")
 check_same.ProbabilitySpace <- function(self, other){
+  # print(self)
+  # print(other)
   if (inherits(other, "ArbitrarySpace")){
+    invisible()
+  } else if (inherits(self, "S") && inherits(other, "S")){
     invisible()
   } else if (!identical(self, other))
     stop("Events must be defined on same probability space.")
@@ -65,6 +69,7 @@ check_same.ProbabilitySpace <- function(self, other){
 
 #' @export
 `%*%` <- function(self, other) UseMethod("%*%")
+
 #' @export
 `%*%.default` <- base::`%*%`
 
@@ -175,25 +180,21 @@ check_same_probSpace.Event <- function(self, other){
 
 # define the event (-A)
 #' @export
-`%!%` <- function(self) UseMethod("%|%")
+`%~%` <- function(self) UseMethod("%~%")
 #' @export
-`%!%.default` <- function(self) stop("Could not perform the operation")
+`%~%.default` <- function(self) stop("Could not perform the operation")
 
 #' @export
-`%!%.Event` <- function(self){
+`%~%.Event` <- function(self){
   return(Event(self$probSpace, function(x) !self$fun()))
 }
-
-# This prevents users from writing expressions like 2 < X < 5,
-# which evaluate to ((2 < X) and (X < 5)).
-# __bool__ : to be implemented later when I got to test all above.
 
 #' @export
 draw.Event <- function(self){
   return(self$fun(draw(self$probSpace)))
 }
 
-#---------------------------------------------------------------
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # BoxModel class
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' Defines a probability space from a box model.

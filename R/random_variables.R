@@ -32,79 +32,75 @@
 RV <- function(probSpace, fun = function(x) x){
   temp_p <- probSpace
 
-  if (length(temp_p) == 3){
+  #print("Inside 1")
+  if (length(temp_p) == 3 && identical(names(temp_p), c("draw", "self", "other"))){
+    #print("Inside 2")
+    wrapper <- function(index) {
+      true_index <- index
+      function(x) fun(x)[true_index]
+    }
     if (!is.numeric(temp_p$other)){
-      # Count number of probSpace intilize a list easier
+      #print("Inside 3")
+      # Count number of probSpace to initialize a list easier
       i <- 2
       while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(temp_p))){
-        if (length(temp_p$self) == 3){
+        if (length(temp_p$self) == 3 && identical(names(temp_p$self), c("draw", "self", "other"))){
           temp_p = temp_p$self
         } else
           break
         i <- i + 1
       }
 
-      temp_p <- probSpace
-      #print(paste("i here: ", i))
-      vect_of_probSpace <- vector("list", i)
       vect_of_rv <- vector("list", i)
 
-      #print("Starting inside")
-      len_to_input <- i
-      ## If there are multiples probSpace created by %*%
-      ## This is the technique to get slicing.
-      ## If first probSpace$self passed in has length 3 means it was created by %*%
-      while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(temp_p))){
-        # print("Inside 1")
-        # print("Other")
-        # print(temp_p$other)
+      for (i in 1:length(vect_of_rv)){
+        vect_of_rv[[i]] <- list(probSpace = probSpace,
+                                fun = wrapper(i))
 
-        vect_of_probSpace[[len_to_input]] <- temp_p$other
-        len_to_input <- len_to_input - 1
-
-        # print("Self")
-        # print(temp_p$self)
-        if (length(temp_p$self) == 3){
-          # Set temp_p = temp_p$self so that the loop can continue
-          # if there are more than 3 probSpace such as: Normal(0, 1) ^ 5
-          #print("Next loop")
-          temp_p = temp_p$self
-        } else
-          break
-
-      }
-
-      vect_of_probSpace[[len_to_input]] <- temp_p$self
-      #print(paste("Print 2: ", vect_of_probSpace[[len_to_input]]))
-      #print(paste("Length: ", length(vect_of_probSpace)))
-
-      for (i in 1:length(vect_of_probSpace)){
-        vect_of_rv[[i]] <- list(probSpace = vect_of_probSpace[[i]],
-                                fun = fun)
         class(vect_of_rv[[i]]) <- append(class(vect_of_rv[[i]]), "RV")
       }
 
-      vect_of_rv[["probSpace"]] <- probSpace
-      vect_of_rv[["fun"]] <- fun
-      class(vect_of_rv) <- append(class(vect_of_rv), "RV")
-      return(vect_of_rv)
     } else {
-      vect_of_probSpace <- vector("list", temp_p$other)
       vect_of_rv <- vector("list", temp_p$other)
 
-      for (i in 1:length(vect_of_probSpace)){
-        vect_of_probSpace[[i]] <- temp_p$self
-        vect_of_rv[[i]] <- list(probSpace = vect_of_probSpace[[i]],
-                                fun = fun)
-        class(vect_of_rv[[i]]) <- append(class(vect_of_rv[[i]]), "RV")
-      }
 
-      vect_of_rv[["probSpace"]] <- probSpace
-      vect_of_rv[["fun"]] <- fun
-      class(vect_of_rv) <- append(class(vect_of_rv), "RV")
-      return(vect_of_rv)
+      for (index in 1:length(vect_of_rv)){
+
+        #inside the loop
+        vect_of_rv[[index]] <- list(probSpace = probSpace,
+                                fun = wrapper(index))
+
+        class(vect_of_rv[[index]]) <- append(class(vect_of_rv[[index]]), "RV")
+
+      }
     }
 
+    vect_of_rv[["probSpace"]] <- probSpace
+    vect_of_rv[["fun"]] <- fun
+    class(vect_of_rv) <- append(class(vect_of_rv), "RV")
+    return(vect_of_rv)
+  } else if (inherits(probSpace, "BoxModel")){
+    wrapper <- function(index) {
+      true_index <- index
+      function(x) fun(x)[true_index]
+    }
+    vect_of_rv <- vector("list", probSpace$size)
+
+
+    for (index in 1:length(vect_of_rv)){
+
+      #inside the loop
+      vect_of_rv[[index]] <- list(probSpace = probSpace,
+                                  fun = wrapper(index))
+
+      class(vect_of_rv[[index]]) <- append(class(vect_of_rv[[index]]), "RV")
+    }
+
+
+    vect_of_rv[["probSpace"]] <- probSpace
+    vect_of_rv[["fun"]] <- fun
+    class(vect_of_rv) <- append(class(vect_of_rv), "RV")
+    return(vect_of_rv)
   } else {
     me <- list(probSpace = probSpace,
                fun = fun)
@@ -227,7 +223,7 @@ apply.RV <- function(self, func, ...){
 }
 
 #-----------------------------------------
-# To be implemented later: iter, getitem
+# Can't implement in R: _iter_, _getitem_
 #-----------------------------------------
 
 #----------------------------------------------
@@ -309,6 +305,7 @@ operation_factory <- function(self, op){
   op_fun <- operation_factory(self, function(x, y) x + y)
   return(op_fun(self, other))
 }
+
 # e.g., 3 + X
 #' @export
 `%+%.numeric` <- function(scalar, obj){
@@ -355,6 +352,7 @@ operation_factory <- function(self, op){
 # e.g., X * Y or X * 2
 #' @export
 `%*%.RV` <- function(self, other){
+  #print("Here")
   op_fun <- operation_factory(self, function(x, y) x * y)
   return(op_fun(self, other))
 }
@@ -382,11 +380,17 @@ operation_factory <- function(self, op){
 #' @export
 `%&%.RV` <- function(self, other){
   check_same_probSpace(self, other)
-
+  #print(self$probSpace)
+  #print(other$probSpace)
   if (inherits(other, "RV")){
+    # temp_ps <- self$probSpace %*% other$probSpace
+    #print(temp_ps)
     fun <- function(outcome) {
-      a <- self$fun(outcome)
-      b <- other$fun(outcome)
+      a <- self$fun(outcome) #[self$probSpace$order]
+
+      #print(a)
+      b <- other$fun(outcome) #[other$probSpace$order]
+      #print(b)
       return(c(a, b))
     }
     return(RV(self$probSpace, fun))
@@ -401,11 +405,11 @@ operation_factory <- function(self, op){
 
 # e.g., X < 3
 #' @export
-`%<%` <- function(self, other) UseMethod("%<%")
+`%<<%` <- function(self, other) UseMethod("%<<%")
 #' @export
-`%<%.default` <- function(self, other) stop("Could not perform the operation")
+`%<<%.default` <- function(self, other) stop("Could not perform the operation")
 #' @export
-`%<%.RV` <- function(self, other){
+`%<<%.RV` <- function(self, other){
   if (is_scalar(other)){
     return(Event(self$probSpace,
                  function(x) self$fun(x) < other))
@@ -474,7 +478,7 @@ operation_factory <- function(self, op){
 `%==%.default` <- function(self, other) stop("Could not perform the operation")
 #' @export
 `%==%.RV` <- function(self, other){
-  if (is_scalar(other)){
+  if (is_scalar(other) || is.character(other)){
     return(Event(self$probSpace,
                  function(x) self$fun(x) == other))
   } else if (inherits(other, "RV")){
@@ -530,7 +534,7 @@ operation_factory <- function(self, op){
 #' X, Y = RV(Binomial(10, 0.4) ** 2)
 #' (X | (X + Y == 5)) %>% draw() # returns a value between 0 and 5.
 
-RVConditional <- function(RV){
+RVConditional <- function(RV, condition_event){
   attribute <- list(probSpace = RV$probSpace,
                     fun = RV$fun,
                     condition_event = condition_event)

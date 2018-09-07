@@ -4,13 +4,13 @@
 \alias{RVConditional}
 \title{Defines a random variable conditional on an event.}
 \usage{
-RVConditional(RV)
+RVConditional(RV, condition_event)
 }
 \arguments{
+\item{condition_event}{(Event): the event to condition on}
+
 \item{random_variable}{(RV): the random variable whose conditional
 distribution is desired}
-
-\item{condition_event}{(Event): the event to condition on}
 }
 \description{
 RVConditionals are typically produced when you condition a

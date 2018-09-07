@@ -30,7 +30,7 @@ apply.Results <- function(self, fun, ...){
   if (get_dimesion(self) == 0){
     results <- sapply(self$results, fun, ...)
   } else
-    results <- apply(self$results, 1, fun, ...)
+    results <- apply(self$results, 2, fun, ...)
 
   # Python code uses type(self) for typecasting, not sure how to do that in R so if-else is used
   if (inherits(self, "RVResults")){
@@ -260,11 +260,12 @@ count_geq.Results <- function(self, value){
 
 #' @export
 plot <- function(self, ...) UseMethod("plot")
-#' @export
-plot.default <- graphics::plot
+
+# #' @export
+# plot.default <- graphics::plot
 
 # Add a ... argument to plot.default to allow passing of package checks:
-formals(plot.default) <- c(formals(plot.default), alist(... = ))
+# formals(plot.default) <- c(formals(plot.default), alist(... = ))
 
 #' @export
 plot.Results <- function(self)
@@ -326,6 +327,7 @@ var.Results <- function(self)
 
 #' @export
 sd <- function(self) UseMethod("sd")
+
 #' @export
 sd.default <- stats::sd
 
@@ -437,8 +439,7 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
           hist +
           labs(y=ylab, x="")
       }
-    }
-    else if (is.element("impulse", type)){
+    } else if (is.element("impulse", type)){
       x <- as.double(tb$Outcome)
       y <- round(tb$Value, 4)
 
@@ -516,7 +517,7 @@ mean.RVResults <- function(self){
  if (get_dimesion(self) == 0){
    return(mean(self$results))
  } else if (get_dimesion(self) > 0){
-   return(apply(self$results, 1, mean))
+   return(apply(self$results, 2, mean))
  } else
    stop("I don't know how to take the mean of these values.")
 }
@@ -526,7 +527,7 @@ var.RVResults <- function(self){
   if (get_dimesion(self) == 0){
     return(var(self$results))
   } else if (get_dimesion(self) > 0){
-    return(apply(self$results, 1, var))
+    return(apply(self$results, 2, var))
   } else
     stop("I don't know how to take the variance of these values.")
 }
@@ -536,14 +537,17 @@ sd.RVResults <- function(self){
   if (get_dimesion(self) == 0){
     return(sd(self$results))
   } else if (get_dimesion(self) > 0){
-    return(apply(self$results, 1, sd))
+    return(apply(self$results, 2, sd))
   } else
     stop("I don't know how to take the standard deviation of these values.")
 }
 
 #' @export
 cov.RVResults <- function(self){
-  if (get_dimesion(self) > 0){
+  if (get_dimesion(self) > 0 && dim(self$results)[2] == 2){
+    return(cov(self$results)[1, 2])
+  }
+  else if (get_dimesion(self) > 0 && dim(self$results)[2] != 2){
     return(cov(self$results))
   } else
     stop("Covariance requires that the simulation results have consistent dimension.")
@@ -551,7 +555,10 @@ cov.RVResults <- function(self){
 
 #' @export
 cor.RVResults <- function(self){
-  if (get_dimesion(self) > 0){
+  if (get_dimesion(self) > 0 && dim(self$results)[2] == 2){
+    return(cor(self$results)[1, 2])
+  }
+  else if (get_dimesion(self) > 0){
     return(cor(self$results))
   } else
     stop("Correlation requires that the simulation results have consistent dimension.")
