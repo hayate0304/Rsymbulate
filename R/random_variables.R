@@ -190,7 +190,7 @@ check_same_probSpace.RV <- function(self, other){
 }
 
 #' @export
-apply <- function(self, ...) UseMethod("apply")
+apply <- function(self, func, ...) UseMethod("apply")
 #' @export
 apply.default <- base::apply
 # add a ... argument to apply.default to allow passing of package checks:
@@ -222,9 +222,6 @@ apply.RV <- function(self, func, ...){
   return(RV(self$probSpace, f_new))
 }
 
-#-----------------------------------------
-# Can't implement in R: _iter_, _getitem_
-#-----------------------------------------
 
 #----------------------------------------------
 # For transforming
@@ -272,7 +269,6 @@ log.RV <- function(self, base = exp(1))
 #------------------------------------------------------------
 
 operation_factory <- function(self, op){
-
   op_fun <- function(self, other){
     check_same_probSpace(self, other)
     if (is_scalar(other)){
@@ -287,98 +283,125 @@ operation_factory <- function(self, op){
         } else
           stop("Could not perform operation.")
       }
-
       return(RV(self$probSpace, fun))
     } else
       return("NotImplemented")
   }
 }
 
-#' @export
-`%+%` <- function(self, other) UseMethod("%+%")
-#' @export
-`%+%.default` <- function(self, other) stop("Could not perform the operation")
+# #' @export
+#`%+%` <- function(self, other) UseMethod("%+%")
+# #' @export
+#`%+%.default` <- function(self, other) stop("Could not perform the operation")
 
 # e.g., X + Y or X + 3
 #' @export
-`%+%.RV` <- function(self, other){
-  op_fun <- operation_factory(self, function(x, y) x + y)
-  return(op_fun(self, other))
+`+.RV` <- function(self, other){
+  if (is.numeric(self)){
+    print("Here")
+    op_fun <- operation_factory(other, function(x, y) x + y)
+    return(op_fun(other, self))
+  } else {
+    op_fun <- operation_factory(self, function(x, y) x + y)
+    return(op_fun(self, other))
+  }
 }
 
 # e.g., 3 + X
-#' @export
-`%+%.numeric` <- function(scalar, obj){
-  return(obj %+% scalar)
-}
+# #' @export
+#`+.numeric` <- function(scalar, obj){
+#  return(obj + scalar)
+#}
 
-#' @export
-`%-%` <- function(self, other) UseMethod("%-%")
-#' @export
-`%-%.default` <- function(self, other) stop("Could not perform the operation")
+# #' @export
+# `%-%` <- function(self, other) UseMethod("%-%")
+# #' @export
+# `%-%.default` <- function(self, other) stop("Could not perform the operation")
 
 # e.g., 3 - X
-#' @export
-`%-%.numeric` <- function(scalar, obj){
-  return(-1 %*% (obj %-% scalar))
-}
+# #' @export
+#`%-%.numeric` <- function(scalar, obj){
+#  return(-1 %*% (obj %-% scalar))
+#}
 
 # e.g., X + Y or X + 3
 #' @export
-`%-%.RV` <- function(self, other){
-  op_fun <- operation_factory(self, function(x, y) x - y)
-  return(op_fun(self, other))
+`-.RV` <- function(self, other){
+  if (is.numeric(self)){
+    return(-1 * (other - self))
+  } else {
+    op_fun <- operation_factory(self, function(x, y) x - y)
+    return(op_fun(self, other))
+  }
 }
 
-#' @export
-`%/%` <- function(self, other) UseMethod("%/%")
-#' @export
-`%/%.default` <- function(self, other) stop("Could not perform the operation")
-
-# e.g., 2 / X
-#' @export
-`%/%.numeric` <- function(scalar, obj){
-  op_fun <- operation_factory(self, function(x, y) y / x)
-  return(op_fun(obj, scalar))
-}
+# #' @export
+# `%/%` <- function(self, other) UseMethod("%/%")
+# # @export
+# `%/%.default` <- function(self, other) stop("Could not perform the operation")
+#
+# # e.g., 2 / X
+# # @export
+# `%/%.numeric` <- function(scalar, obj){
+#   op_fun <- operation_factory(obj, function(x, y) y / x)
+#   return(op_fun(obj, scalar))
+# }
 
 # e.g., X / Y or X / 2
 #' @export
-`%/%.RV` <- function(self, other){
-  op_fun <- operation_factory(self, function(x, y) x / y)
-  return(op_fun(self, other))
+`/.RV` <- function(self, other){
+  if (is.numeric(self)){
+    print("Here")
+    op_fun <- operation_factory(other, function(x, y) y / x)
+    return(op_fun(other, self))
+  } else {
+    op_fun <- operation_factory(self, function(x, y) x / y)
+    return(op_fun(self, other))
+  }
 }
 
 # e.g., X * Y or X * 2
 #' @export
-`%*%.RV` <- function(self, other){
-  #print("Here")
-  op_fun <- operation_factory(self, function(x, y) x * y)
-  return(op_fun(self, other))
+`*.RV` <- function(self, other){
+  print("Here")
+  if (is.numeric(self)){
+    print("Here")
+    op_fun <- operation_factory(other, function(x, y) x * y)
+    return(op_fun(other, self))
+  } else {
+    op_fun <- operation_factory(self, function(x, y) x * y)
+    return(op_fun(self, other))
+  }
 }
 
 # e.g., 2 * X
-#' @export
-`%*%.numeric` <- function(scalar, obj){
-  return(obj %*% scalar)
-}
+# @export
+# `%*%.numeric` <- function(scalar, obj){
+#   return(obj %*% scalar)
+# }
 
 # e.g., X ^ Y or X ^ 2
 #' @export
-`%^%.RV` <- function(self, other){
-  op_fun <- operation_factory(self, function(x, y) x ^ y)
-  return(op_fun(self, other))
+`^.RV` <- function(self, other){
+  if (is.numeric(self)){
+    print("Here")
+    op_fun <- operation_factory(other, function(x, y) y ^ x)
+    return(op_fun(other, self))
+  } else {
+    op_fun <- operation_factory(self, function(x, y) x ^ y)
+    return(op_fun(self, other))
+  }
 }
 
 #e.g., 2 ^ X
-#' @export
-`%^%.numeric` <- function(scalar, obj){
-  op_fun <- operation_factory(self, function(x, y) y ^ x)
-  return(op_fun(self, other))
-}
+# @export
+# `^.numeric` <- function(scalar, obj){
+#   op_fun <- operation_factory(obj, function(x, y) y ^ x)
+#   return(op_fun(obj, scalar))
+# }
 
 #' @export
-`%&%.RV` <- function(self, other){
+`&.RV` <- function(self, other){
   check_same_probSpace(self, other)
   #print(self$probSpace)
   #print(other$probSpace)
@@ -404,12 +427,13 @@ operation_factory <- function(self, op){
 #------------------------------------------------------------
 
 # e.g., X < 3
+# @export
+# `%<<%` <- function(self, other) UseMethod("%<<%")
+# # @export
+# `%<<%.default` <- function(self, other) stop("Could not perform the operation")
+
 #' @export
-`%<<%` <- function(self, other) UseMethod("%<<%")
-#' @export
-`%<<%.default` <- function(self, other) stop("Could not perform the operation")
-#' @export
-`%<<%.RV` <- function(self, other){
+`<.RV` <- function(self, other){
   if (is_scalar(other)){
     return(Event(self$probSpace,
                  function(x) self$fun(x) < other))
@@ -421,12 +445,13 @@ operation_factory <- function(self, op){
 }
 
 # e.g., X <= 3
+# @export
+# `%<=%` <- function(self, other) UseMethod("%<=%")
+# # @export
+# `%<=%.default` <- function(self, other) stop("Could not perform the operation")
+
 #' @export
-`%<=%` <- function(self, other) UseMethod("%<=%")
-#' @export
-`%<=%.default` <- function(self, other) stop("Could not perform the operation")
-#' @export
-`%<=%.RV` <- function(self, other){
+`<=.RV` <- function(self, other){
   if (is_scalar(other)){
     return(Event(self$probSpace,
                  function(x) self$fun(x) <= other))
@@ -438,12 +463,13 @@ operation_factory <- function(self, op){
 }
 
 # e.g., X > 3
+# @export
+# `%>>%` <- function(self, other) UseMethod("%>>%")
+# # @export
+# `%>>%.default` <- function(self, other) stop("Could not perform the operation")
+
 #' @export
-`%>>%` <- function(self, other) UseMethod("%>>%")
-#' @export
-`%>>%.default` <- function(self, other) stop("Could not perform the operation")
-#' @export
-`%>>%.RV` <- function(self, other){
+`>.RV` <- function(self, other){
   if (is_scalar(other)){
     return(Event(self$probSpace,
                  function(x) self$fun(x) > other))
@@ -455,12 +481,13 @@ operation_factory <- function(self, op){
 }
 
 # e.g., X >= 3
+# @export
+# `%>=%` <- function(self, other) UseMethod("%>=%")
+# # @export
+# `%>=%.default` <- function(self, other) stop("Could not perform the operation")
+
 #' @export
-`%>=%` <- function(self, other) UseMethod("%>=%")
-#' @export
-`%>=%.default` <- function(self, other) stop("Could not perform the operation")
-#' @export
-`%>=%.RV` <- function(self, other){
+`>=.RV` <- function(self, other){
   if (is_scalar(other)){
     return(Event(self$probSpace,
                  function(x) self$fun(x) >= other))
@@ -472,12 +499,13 @@ operation_factory <- function(self, op){
 }
 
 # e.g., X == 3
+# @export
+# `%==%` <- function(self, other) UseMethod("%==%")
+# # @export
+# `%==%.default` <- function(self, other) stop("Could not perform the operation")
+
 #' @export
-`%==%` <- function(self, other) UseMethod("%==%")
-#' @export
-`%==%.default` <- function(self, other) stop("Could not perform the operation")
-#' @export
-`%==%.RV` <- function(self, other){
+`==.RV` <- function(self, other){
   if (is_scalar(other) || is.character(other)){
     return(Event(self$probSpace,
                  function(x) self$fun(x) == other))
@@ -489,12 +517,13 @@ operation_factory <- function(self, op){
 }
 
 # e.g., X != 3
+# @export
+# `%!=%` <- function(self, other) UseMethod("%!=%")
+# # @export
+# `%!=%.default` <- function(self, other) stop("Could not perform the operation")
+
 #' @export
-`%!=%` <- function(self, other) UseMethod("%!=%")
-#' @export
-`%!=%.default` <- function(self, other) stop("Could not perform the operation")
-#' @export
-`%!=%.RV` <- function(self, other){
+`!=.RV` <- function(self, other){
   if (is_scalar(other)){
     return(Event(self$probSpace,
                  function(x) self$fun(x) != other))
@@ -507,12 +536,13 @@ operation_factory <- function(self, op){
 
 # Define conditional distribution of random variable.
 # e.g., X | (X > 3)
+# @export
+# `%|%` <- function(self, condition_event) UseMethod("%|%")
+# # @export
+# `%|%.default` <- function(self, condition_event) stop("Could not perform the operation")
+
 #' @export
-`%|%` <- function(self, condition_event) UseMethod("%|%")
-#' @export
-`%|%.default` <- function(self, condition_event) stop("Could not perform the operation")
-#' @export
-`%|%.RV` <- function(self, condition_event){
+`|.RV` <- function(self, condition_event){
   check_same_probSpace(self, condition_event)
 
   if (inherits(condition_event, "Event")){

@@ -64,7 +64,7 @@ length.Results <- function(self){
 }
 
 #' @export
-tabulate <- function(self, ...) UseMethod("tabulate")
+tabulate <- function(self, normalize = FALSE) UseMethod("tabulate")
 #' @export
 tabulate.default <- base::tabulate
 
@@ -103,7 +103,7 @@ tabulate.Results <- function(self, normalize = FALSE){
 #------------------------------------------------------------------------
 
 #' @export
-filter <- function(self, ...) UseMethod("filter")
+filter <- function(self, fun) UseMethod("filter")
 #' @export
 filter.default <- stats::filter
 
@@ -259,8 +259,8 @@ count_geq.Results <- function(self, value){
 }
 
 #' @export
-plot <- function(self, ...) UseMethod("plot")
-
+plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
+                 jitter=FALSE, bins=NULL) UseMethod("plot")
 # #' @export
 # plot.default <- graphics::plot
 
@@ -279,22 +279,22 @@ plot.Results <- function(self)
 # Operators
 #--------------------------------------------------------------------------
 #' @export
-`%-%.Results` <- function(self, scalar){
+`-.Results` <- function(self, scalar){
   return(self$results - scalar)
 }
 
 #' @export
-`%+%.Results` <- function(self, scalar){
+`+.Results` <- function(self, scalar){
   return(self$results + scalar)
 }
 
 #' @export
-`%/%.Results` <- function(self, scalar){
+`/.Results` <- function(self, scalar){
   return(self$results / scalar)
 }
 
 #' @export
-`%*%.Results` <- function(self, scalar){
+`*.Results` <- function(self, scalar){
   return(self$results * scalar)
 }
 
@@ -310,7 +310,8 @@ mean.Results <- function(self)
              "Then call mean() on those simulations."))
 
 #' @export
-var <- function(self, ...) UseMethod("var")
+var <- function(self) UseMethod("var")
+
 #' @export
 var.default <- stats::var
 
@@ -394,7 +395,7 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
   # If RVResults is vector
   if (dim == 0){
     tb <- tabulate(self)
-    #print(tb)
+
     heights <- tb$Value
     #print(heights)
     discrete <- is_discrete(heights)
@@ -418,8 +419,23 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
     #--------------------------------------
     ## if density in type to be implemented
     #--------------------------------------
+    if (is.element("density", type)){
+      if (discrete){
+        x <- as.double(tb$Outcome)
+        y <- density(x)
+
+        if (normalize)
+          ylab = "Density"
+
+        ggplot(d, aes(x=X1, y=value, color=variable)) +
+          geom_line(aes(linetype=variable), size=1) +
+          geom_point(aes(shape=variable, size=4))
+      }
+    }
+
 
     if (is.element("hist", type) || is.element("bar", type)){
+      x <- as.double(tb$Outcome)
       if (normalize)
         ylab = "Density"
 
@@ -430,9 +446,11 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
       } else {
         if (normalize){
           hist <- ggplot2::geom_histogram(bins = bins, fill = color(), ggplot2::aes(y=..density..),
-                                          alpha = alpha)
+                                          alpha = alpha,
+                                          breaks=seq(min(x), max(x), (max(x)-min(x))/30))
         }else{
-          hist <- ggplot2::geom_histogram(bins = bins, fill = color(), alpha = alpha)
+          hist <- ggplot2::geom_histogram(bins = bins, fill = color(), alpha = alpha,
+                                          breaks=seq(min(x), max(x), (max(x)-min(x))/30))
         }
 
         ggplot2::ggplot() + ggplot2::aes(self$results) +
@@ -495,12 +513,14 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
     } else
       color <- get_next_color()
 
+    print("Here")
     if (is.element("scatter", type)){
       if (jitter){
         x <- x + rnorm(length(x), 0, .01 * (max(x) - min(x)))
         y <- y + rnorm(length(y), 0, .01 * (max(y) - min(y)))
       }
 
+      print("Inside")
       ggplot2::ggplot(, aes(x=x, y=y)) +
         ggplot2::geom_point(size=2, color = color(), alpha = alpha) +
         labs(y="", x="")

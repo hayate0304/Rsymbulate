@@ -67,14 +67,14 @@ check_same.ProbabilitySpace <- function(self, other){
 }
 
 
-#' @export
-`%*%` <- function(self, other) UseMethod("%*%")
+# #' @export
+#`%*%` <- function(self, other) UseMethod("%*%")
+
+# #' @export
+#`%*%.default` <- base::`%*%`
 
 #' @export
-`%*%.default` <- base::`%*%`
-
-#' @export
-`%*%.ProbabilitySpace` <- function(self, other){
+`*.ProbabilitySpace` <- function(self, other){
 
   # Create function "dr" to pass to ProbabilitySpace. If I change this function's name
   # to "draw" then R will be aborted since the function's name mess up with other method
@@ -85,13 +85,13 @@ check_same.ProbabilitySpace <- function(self, other){
   return(ProbabilitySpace(dr, self, other))
 }
 
-#' @export
-`%^%` <- function(self, exponent)  UseMethod("%^%")
-#' @export
-`%^%.default` <- function(self, exponent)  stop("Could not perform the operation")
+# #' @export
+#`%^%` <- function(self, exponent)  UseMethod("%^%")
+# #' @export
+#`%^%.default` <- function(self, exponent)  stop("Could not perform the operation")
 
 #' @export
-`%^%.ProbabilitySpace` <- function(self, exponent){
+`^.ProbabilitySpace` <- function(self, exponent){
   if (is.infinite(exponent)){
     dr <- function(){
       seed <- get_seed()
@@ -149,49 +149,57 @@ check_same_probSpace.Event <- function(self, other){
 }
 
 #' @export
-`%&%` <- function(self, other) UseMethod("%&%")
-#' @export
-`%&%.default` <- function(self, other) stop("Could not perform the operation")
+`&` <- function(self, other) UseMethod("&", self)
+# # @export
+# `%&%.default` <- function(self, other) stop("Could not perform the operation")
 
 # define the event (A & B)
 #' @export
-`%&%.Event` <- function(self, other){
+`&.Event` <- function(self, other){
   check_same_probSpace(self, other)
 
   if (inherits(other, "Event")){
-    return(Event(self$probSpace, function(x) self$fun(x) & other$fun(x)))
+    return(Event(self$probSpace, function(x) self$fun(x) && other$fun(x)))
   }
 }
 
 # define the event (A | B)
 #' @export
-`%|%` <- function(self, other) UseMethod("%|%")
-#' @export
-`%|%.default` <- function(self, other) stop("Could not perform the operation")
+`|` <- function(self, other) UseMethod("|", self)
+# # @export
+# `%|%.default` <- function(self, other) stop("Could not perform the operation")
 
 #' @export
-`%|%.Event` <- function(self, other){
+`|.Event` <- function(self, other){
   check_same_probSpace(self, other)
 
   if (inherits(other, "Event")){
-    return(Event(self$probSpace, function(x) self$fun(x) | other$fun(x)))
+    return(Event(self$probSpace, function(x) self$fun(x) || other$fun(x)))
   }
 }
 
 # define the event (-A)
-#' @export
-`%~%` <- function(self) UseMethod("%~%")
-#' @export
-`%~%.default` <- function(self) stop("Could not perform the operation")
+# @export
+# `%~%` <- function(self) UseMethod("%~%")
+# # @export
+# `%~%.default` <- function(self) stop("Could not perform the operation")
 
 #' @export
-`%~%.Event` <- function(self){
-  return(Event(self$probSpace, function(x) !self$fun()))
+`!.Event` <- function(self){
+  return(Event(self$probSpace, function(x) !self$fun(x)))
 }
 
 #' @export
 draw.Event <- function(self){
   return(self$fun(draw(self$probSpace)))
+}
+
+#' @export
+sim.Event <- function(self, n){
+  if (length(draw(self)) == 1){
+    return(Results(replicate(n, draw(self))))
+  } else
+    return(Results(t(replicate(n, draw(self)))))
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
