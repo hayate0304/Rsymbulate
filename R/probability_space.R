@@ -1,8 +1,3 @@
-# source("seed.R")
-# source("sequences.R")
-# library(rlist)
-# library(magrittr)
-
 #---------------------------------------------------------------
 # ProbabilitySpace class
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -14,15 +9,15 @@
 #' @return ProbabilitySpace
 #' @export
 ProbabilitySpace <- function(DrawFunc, self = NULL, other = NULL){
-  me <- list(
+  attribute <- list(
     draw = DrawFunc,
     self = self,
     other = other
   )
 
   # Set name of the class
-  class(me) <- append(class(me), "ProbabilitySpace")
-  return(me)
+  class(attribute) <- append(class(attribute), "ProbabilitySpace")
+  return(attribute)
 }
 
 #' @export
@@ -118,24 +113,24 @@ check_same.ProbabilitySpace <- function(self, other){
 # ArbitrarySpace class
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ArbitrarySpace <- function(){
-  me <- list(
+  attribute <- list(
     draw = function() 1
   )
 
   # Add name for the class
-  class(me) <- c(class(me), "ArbitrarySpace", "ProbabilitySpace")
-  return(me)
+  class(attribute) <- c(class(attribute), "ArbitrarySpace", "ProbabilitySpace")
+  return(attribute)
 }
 
 #---------------------------------------------------------------
 # Event class
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Event <- function(probSpace, fun){
-  me <- list(probSpace = probSpace,
+  attribute <- list(probSpace = probSpace,
              fun = fun)
 
-  class(me) <- append(class(me), "Event")
-  return(me)
+  class(attribute) <- append(class(attribute), "Event")
+  return(attribute)
 }
 
 check_same_probSpace <- function(self, other)
@@ -242,15 +237,15 @@ BoxModel <- function(box, size = 1, replace = TRUE,
   } else
       stop("Box must be specified either as a vector or a list.")
 
-  me <- list(box = self.box,
+  attribute <- list(box = self.box,
              size = size,
              replace = replace,
              probs = probs,
              order_matters = order_matters)
 
   ## Add name for the class
-  class(me) <- c(class(me), "BoxModel", "ProbabilitySpace")
-  return(me)
+  class(attribute) <- c(class(attribute), "BoxModel", "ProbabilitySpace")
+  return(attribute)
 }
 
 #' A function that takes no arguments and returns a value(s) from the
@@ -310,13 +305,13 @@ DeckOfCards <- function(size = 1, replace = FALSE, order_matters = TRUE){
   deck <- paste(rep(c(2:10, "J", "Q", "K", "A"), 4),  #card values
                 rep(c("Diamonds", "Hearts", "Clubs", "Spades"), each = 13)) #asuits
 
-  me <- list(box = deck,
+  attribute <- list(box = deck,
              size = size,
              replace = replace,
              probs = NULL,
              order_matters = order_matters)
 
-  class(me) <- c(class(me), "DeckOfCards", "BoxModel", "ProbabilitySpace")
-  return(me)
+  class(attribute) <- c(class(attribute), "DeckOfCards", "BoxModel", "ProbabilitySpace")
+  return(attribute)
 }
 

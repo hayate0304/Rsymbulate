@@ -102,11 +102,11 @@ RV <- function(probSpace, fun = function(x) x){
     class(vect_of_rv) <- append(class(vect_of_rv), "RV")
     return(vect_of_rv)
   } else {
-    me <- list(probSpace = probSpace,
+    attribute <- list(probSpace = probSpace,
                fun = fun)
 
-    class(me) <- append(class(me), "RV")
-    return(me)
+    class(attribute) <- append(class(attribute), "RV")
+    return(attribute)
   }
 
 }
@@ -298,7 +298,7 @@ operation_factory <- function(self, op){
 #' @export
 `+.RV` <- function(self, other){
   if (is.numeric(self)){
-    print("Here")
+    #print("Here")
     op_fun <- operation_factory(other, function(x, y) x + y)
     return(op_fun(other, self))
   } else {
@@ -351,7 +351,7 @@ operation_factory <- function(self, op){
 #' @export
 `/.RV` <- function(self, other){
   if (is.numeric(self)){
-    print("Here")
+    #print("Here")
     op_fun <- operation_factory(other, function(x, y) y / x)
     return(op_fun(other, self))
   } else {
@@ -363,9 +363,9 @@ operation_factory <- function(self, op){
 # e.g., X * Y or X * 2
 #' @export
 `*.RV` <- function(self, other){
-  print("Here")
+  #print("Here")
   if (is.numeric(self)){
-    print("Here")
+    #print("Here")
     op_fun <- operation_factory(other, function(x, y) x * y)
     return(op_fun(other, self))
   } else {
@@ -384,7 +384,7 @@ operation_factory <- function(self, op){
 #' @export
 `^.RV` <- function(self, other){
   if (is.numeric(self)){
-    print("Here")
+    #print("Here")
     op_fun <- operation_factory(other, function(x, y) y ^ x)
     return(op_fun(other, self))
   } else {

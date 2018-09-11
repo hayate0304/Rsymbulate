@@ -12,10 +12,10 @@
 #---------------------------------------------------------
 #' @export
 Results <- function(results){
-  me <- list(results = results)
-  class(me) <- c(class(me), "Results")
+  attribute <- list(results = results)
+  class(attribute) <- c(class(attribute), "Results")
 
-  return(me)
+  return(attribute)
 }
 
 #' Apply a function to each outcome of a simulation.
@@ -259,8 +259,7 @@ count_geq.Results <- function(self, value){
 }
 
 #' @export
-plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
-                 jitter=FALSE, bins=NULL) UseMethod("plot")
+plot <- function(self, ...) UseMethod("plot")
 # #' @export
 # plot.default <- graphics::plot
 
@@ -380,10 +379,10 @@ cor.Results <- function(self)
 #---------------------------------------------------------
 #' @export
 RVResults <- function(results){
-  me <- list(results = results)
+  attribute <- list(results = results)
 
-  class(me) <- c(class(me), "RVResults", "Results")
-  return(me)
+  class(attribute) <- c(class(attribute), "RVResults", "Results")
+  return(attribute)
 }
 
 #' @export
@@ -403,59 +402,47 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
 
     if (identical(type, NULL)){
       if (discrete){
-        type <- c(type, "impulse")
+        type <- append(type, "impulse")
       } else
-        type <- c(type, "hist")
+        type <- append(type, "hist")
     }
     if (identical(alpha, NULL))
       alpha <- 0.45
     if (identical(bins, NULL))
       bins <- 30
 
+    #print(type)
     color <- get_next_color()
-    ylab <- "count"
+    ylab <- "Count"
     tb <- tabulate(self, normalize = normalize)
 
-    #--------------------------------------
-    ## if density in type to be implemented
-    #--------------------------------------
-    if (is.element("density", type)){
-      if (discrete){
-        x <- as.double(tb$Outcome)
-        y <- density(x)
-
-        if (normalize)
-          ylab = "Density"
-
-        ggplot(d, aes(x=X1, y=value, color=variable)) +
-          geom_line(aes(linetype=variable), size=1) +
-          geom_point(aes(shape=variable, size=4))
-      }
-    }
-
-
     if (is.element("hist", type) || is.element("bar", type)){
+      #print("Here 1")
       x <- as.double(tb$Outcome)
       if (normalize)
         ylab = "Density"
 
       if (identical(type, c("hist", "impulse"))){
-        ggplot2::ggplot(tb, aes(Outcome, Value)) +
-          ggplot2::geom_bar(stat="identity", fill = color(), , alpha = alpha) +
-          labs(y=ylab, x="")
+        g <- ggplot2::ggplot(tb, aes(Outcome, Value)) +
+          ggplot2::geom_bar(stat="identity", fill = color(), alpha = alpha) +
+          ggplot2::labs(y=ylab, x="")
+        #print("Here 2")
+        print(g)
       } else {
         if (normalize){
           hist <- ggplot2::geom_histogram(bins = bins, fill = color(), ggplot2::aes(y=..density..),
                                           alpha = alpha,
                                           breaks=seq(min(x), max(x), (max(x)-min(x))/30))
-        }else{
+        } else{
           hist <- ggplot2::geom_histogram(bins = bins, fill = color(), alpha = alpha,
                                           breaks=seq(min(x), max(x), (max(x)-min(x))/30))
         }
 
-        ggplot2::ggplot() + ggplot2::aes(self$results) +
+        g <- ggplot2::ggplot() + ggplot2::aes(self$results) +
           hist +
-          labs(y=ylab, x="")
+          ggplot2::labs(y=ylab, x="")
+        #print("Here 3")
+        print(g)
       }
     } else if (is.element("impulse", type)){
       x <- as.double(tb$Outcome)
@@ -474,18 +461,38 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
         x <- x + noise
       }
 
-      #print(x)
-      #print(y)
-
       if (normalize)
         ylab = "Relative Frequency"
 
       # plot the impulses
       # graphics::plot(x, y, type="h", col = rgb(color,alpha = alpha),
       #                ylab = ylab, xlab = "")
-      ggplot2::ggplot(tb, aes(x=Outcome, xend=Outcome, y=0, yend=Value)) +
-        ggplot2::geom_segment(color=color(), alpha = alpha) +
-        ylab(ylab)
+      g <- ggplot2::ggplot(tb, aes(x=Outcome, xend=Outcome, y=0, yend=Value)) +
+        ggplot2::geom_segment(color = color(), alpha = alpha) +
+        labs(y=ylab, x="")
+      #print("Here 4")
+      print(g)
+    } else if (is.element("density", type)){
+      #print("Here really 1")
+      #--------------------------------------
+      ## if density in type to be implemented
+      #--------------------------------------
+      if (discrete){
+        #print("Here really")
+        tb <- tabulate(self)
+        x <- as.double(tb$Outcome)
+        y <- sapply(tb$Value, "/", length(self))
+
+        if (length(type) == 1)
+          ylab = "Relative Frequency"
+
+        g <- ggplot2::ggplot(, aes(x=x, y=y, color = color())) +
+          geom_line() +
+          geom_point() +
+          labs(y=ylab, x="") + theme(legend.position="none")
+        print(g)
+      }
+
     }
   } else if (dim == 2){
     x <- self$results[,1]
@@ -513,19 +520,18 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
     } else
       color <- get_next_color()
 
-    print("Here")
     if (is.element("scatter", type)){
       if (jitter){
         x <- x + rnorm(length(x), 0, .01 * (max(x) - min(x)))
         y <- y + rnorm(length(y), 0, .01 * (max(y) - min(y)))
       }
 
-      print("Inside")
       ggplot2::ggplot(, aes(x=x, y=y)) +
         ggplot2::geom_point(size=2, color = color(), alpha = alpha) +
         labs(y="", x="")
     }
   }
+  return(g)
 }
 
 #--------------------------------------------------------------------------
