@@ -259,7 +259,8 @@ count_geq.Results <- function(self, value){
 }
 
 #' @export
-plot <- function(self, ...) UseMethod("plot")
+plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
+                 jitter=FALSE, bins=NULL, ...) UseMethod("plot")
 # #' @export
 # plot.default <- graphics::plot
 
@@ -422,29 +423,25 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
       if (normalize)
         ylab = "Density"
 
-      if (identical(type, c("hist", "impulse"))){
-        g <- ggplot2::ggplot(tb, aes(Outcome, Value)) +
-          ggplot2::geom_bar(stat="identity", fill = color(), alpha = alpha) +
-          ggplot2::labs(y=ylab, x="")
-        #print("Here 2")
-        print(g)
-      } else {
-        if (normalize){
-          hist <- ggplot2::geom_histogram(bins = bins, fill = color(), ggplot2::aes(y=..density..),
-                                          alpha = alpha,
-                                          breaks=seq(min(x), max(x), (max(x)-min(x))/30))
-        } else{
-          hist <- ggplot2::geom_histogram(bins = bins, fill = color(), alpha = alpha,
-                                          breaks=seq(min(x), max(x), (max(x)-min(x))/30))
-        }
-
-        g <- ggplot2::ggplot() + ggplot2::aes(self$results) +
-          hist +
-          ggplot2::labs(y=ylab, x="")
-        #print("Here 3")
-        print(g)
+      if (normalize){
+        hist <- ggplot2::geom_histogram(bins = bins,
+                                        fill = color(), aes(x=self$results, y=..density..),
+                                        alpha = alpha,
+                                        breaks=seq(min(x), max(x), (max(x)-min(x))/30),
+                                        na.rm = TRUE)
+      } else{
+        hist <- ggplot2::geom_histogram(bins = bins,
+                                        fill = color(), alpha = alpha, aes(x = self$results),
+                                        breaks=seq(min(x), max(x), (max(x)-min(x))/30),
+                                        na.rm = TRUE)
       }
+
+      g <- ggplot2::ggplot() +
+        hist +
+        labs(y=ylab, x="")
+
     } else if (is.element("impulse", type)){
+      #print("Here")
       x <- as.double(tb$Outcome)
       y <- round(tb$Value, 4)
 
@@ -464,40 +461,17 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
       if (normalize)
         ylab = "Relative Frequency"
 
-      # plot the impulses
-      # graphics::plot(x, y, type="h", col = rgb(color,alpha = alpha),
-      #                ylab = ylab, xlab = "")
-      g <- ggplot2::ggplot(tb, aes(x=Outcome, xend=Outcome, y=0, yend=Value)) +
-        ggplot2::geom_segment(color = color(), alpha = alpha) +
+      g <- ggplot2::ggplot() +
+        geom_segment(data = tb, aes(x=Outcome, xend=Outcome, y=0, yend=Value),
+                     color = color(), alpha = alpha, na.rm = TRUE) +
         labs(y=ylab, x="")
       #print("Here 4")
-      print(g)
-    } else if (is.element("density", type)){
-      #print("Here really 1")
-      #--------------------------------------
-      ## if density in type to be implemented
-      #--------------------------------------
-      if (discrete){
-        #print("Here really")
-        tb <- tabulate(self)
-        x <- as.double(tb$Outcome)
-        y <- sapply(tb$Value, "/", length(self))
-
-        if (length(type) == 1)
-          ylab = "Relative Frequency"
-
-        g <- ggplot2::ggplot(, aes(x=x, y=y, color = color())) +
-          geom_line() +
-          geom_point() +
-          labs(y=ylab, x="") + theme(legend.position="none")
-        print(g)
-      }
-
+      #print(g)
     }
   } else if (dim == 2){
     x <- self$results[,1]
     y <- self$results[,2]
-#
+
 #     print(x)
 #     print(y)
     x_height <- as.vector(table(self$results[,1]))
@@ -526,11 +500,13 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
         y <- y + rnorm(length(y), 0, .01 * (max(y) - min(y)))
       }
 
-      ggplot2::ggplot(, aes(x=x, y=y)) +
+      g <- ggplot2::ggplot(, aes(x=x, y=y)) +
         ggplot2::geom_point(size=2, color = color(), alpha = alpha) +
         labs(y="", x="")
     }
   }
+
+  #print(g)
   return(g)
 }
 

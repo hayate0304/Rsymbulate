@@ -26,8 +26,8 @@ Distribution <- function(params, dist, discrete = TRUE){
 }
 
 #' @export
-plot.Distribution <- function(self, type = NULL, alpha = NULL, xlim = NULL,
-                              new = NULL, ...){
+plot.Distribution <- function(self, type = NULL, alpha = 0.4,
+                              xlim = NULL, new = NULL, ...){
   xlower = self$xlim[1]
   xupper = self$xlim[2]
 
@@ -38,39 +38,35 @@ plot.Distribution <- function(self, type = NULL, alpha = NULL, xlim = NULL,
   } else
     xvals <- seq(xlower, xupper, length.out = 100)
 
-  if (identical(alpha, NULL))
-    alpha = 0.4
-
   yvals <- self$pdf(xvals)
 
   color <- get_next_color()
   col <- color()
-
+  y <- ""
   if (identical(new, NULL)){
     g <- ggplot()
   } else{
     g <- new
-    col <- "green"
+    col <- "seagreen"
     alpha = 1
+    y <- new$labels$y
   }
 
   if (self$discrete){
-    # g <- g + ggplot(, aes(x=xvals, y=yvals, alpha = alpha, ...)) +
-    #       geom_point(size = 4, color = col) +
-    #       geom_line(size = 1.5, color = col)
     g <- g +
-      geom_point(aes(x=xvals, y=yvals, alpha = alpha, ...), color = col) +
+      geom_point(aes(x=xvals, y=yvals, alpha = alpha, ...), size = 2.5, color = col) +
       geom_line(aes(x=xvals, y=yvals, alpha = alpha, ...), color = col)
   } else{
     g <- g +
-    geom_line(aes(x=xvals, y=yvals, alpha = 1, ...), color = col, size = 1)
+      geom_line(aes(x=xvals, y=yvals, alpha = alpha, ...), color = col, size = 1.2,
+                na.rm = TRUE)
 
   }
 
   g <- g + xlim(self$xlim) + theme(legend.position="none") +
-    labs(y = "", x = "")
+    labs(y = y, x = "")
 
-  suppressMessages(print(g))
+  return(suppressMessages(g))
 }
 
 #----------------------------------------------------------
@@ -276,7 +272,7 @@ Normal <- function(mean=0.0, sd=1.0, var=NULL){
 
   params <- list(mean, scale)
 
-  attribute <- Distribution(params, "norm", TRUE)
+  attribute <- Distribution(params, "norm", F)
   attribute[["mean"]]= mean
   attribute[["scale"]]= scale
 
