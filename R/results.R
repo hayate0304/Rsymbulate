@@ -5,7 +5,6 @@
 # probability space or realizations of a random variable /
 # random process.
 #
-
 #' @import ggplot2
 #---------------------------------------------------------
 #             Results Class
@@ -88,7 +87,6 @@ tabulate.Results <- function(self, normalize = FALSE){
     #print(df)
     if (ncol(df) == 2){
       df$Value <- round(df$Value / sum(df$Value), 4)
-      #print(df$Value)
     } else {
       df$Value <- round(df$freq / sum(df$freq), 4)
       df$freq <- NULL
@@ -101,7 +99,6 @@ tabulate.Results <- function(self, normalize = FALSE){
 #------------------------------------------------------------------------
 # filter family
 #------------------------------------------------------------------------
-
 #' @export
 filter <- function(self, fun) UseMethod("filter")
 #' @export
@@ -261,11 +258,6 @@ count_geq.Results <- function(self, value){
 #' @export
 plot <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
                  jitter=FALSE, bins=NULL, ...) UseMethod("plot")
-# #' @export
-# plot.default <- graphics::plot
-
-# Add a ... argument to plot.default to allow passing of package checks:
-# formals(plot.default) <- c(formals(plot.default), alist(... = ))
 
 #' @export
 plot.Results <- function(self)
@@ -301,6 +293,7 @@ plot.Results <- function(self)
 #--------------------------------------------------------------------------
 # Stats functions
 #--------------------------------------------------------------------------
+# mean is generic in R. Thus, no need UseMethod()
 #' @export
 mean.Results <- function(self)
   stop(paste("You can only call mean() on simulations of ",
@@ -311,7 +304,6 @@ mean.Results <- function(self)
 
 #' @export
 var <- function(self) UseMethod("var")
-
 #' @export
 var.default <- stats::var
 
@@ -328,7 +320,6 @@ var.Results <- function(self)
 
 #' @export
 sd <- function(self) UseMethod("sd")
-
 #' @export
 sd.default <- stats::sd
 
@@ -386,10 +377,14 @@ RVResults <- function(results){
   return(attribute)
 }
 
+# plot function use ggplot so that it is easier to add plot later.
+# aes() is specified inside components of ggplot, but not in ggplot()
+# because different data could be inserted later for overlaying.
+# If aes() is specified in the main ggplot(), it would mess up with the
+# data later added.
 #' @export
 plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
                             jitter=FALSE, bins=NULL){
-
   dim <- get_dimesion(self)
 
   # If RVResults is vector
@@ -418,7 +413,6 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
     tb <- tabulate(self, normalize = normalize)
 
     if (is.element("hist", type) || is.element("bar", type)){
-      #print("Here 1")
       x <- as.double(tb$Outcome)
       if (normalize)
         ylab = "Density"
@@ -445,9 +439,6 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
       x <- as.double(tb$Outcome)
       y <- round(tb$Value, 4)
 
-      #print("Here")
-      #print(y)
-
       if (identical(alpha, NULL))
         alpha <- 0.7
       if (normalize)
@@ -465,15 +456,11 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
         geom_segment(data = tb, aes(x=Outcome, xend=Outcome, y=0, yend=Value),
                      color = color(), alpha = alpha, na.rm = TRUE) +
         labs(y=ylab, x="")
-      #print("Here 4")
-      #print(g)
     }
   } else if (dim == 2){
     x <- self$results[,1]
     y <- self$results[,2]
 
-#     print(x)
-#     print(y)
     x_height <- as.vector(table(self$results[,1]))
     y_height <- as.vector(table(self$results[,2]))
     discrete_x <- is_discrete(x_height)
@@ -505,15 +492,12 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
         labs(y="", x="")
     }
   }
-
-  #print(g)
   return(g)
 }
 
 #--------------------------------------------------------------------------
 # Stats functions
 #--------------------------------------------------------------------------
-
 #' @export
 mean.RVResults <- function(self){
  if (get_dimesion(self) == 0){

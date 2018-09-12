@@ -2,18 +2,15 @@
 #' @import ggplot2
 #' @import extraDistr
 
-wrap <- function(fun, args){
-  p <- paste0("do.call(", fun, args, ")")
-  return(parse(text = p))
-}
-
 Distribution <- function(params, dist, discrete = TRUE){
+  # f store the density functions: dnorm, dunif,...
   f <- paste0("d", dist)
   pdf <- function(x){
     x <- list(x)
     do.call(f, c(x, params))
   }
 
+  # ppf store the quantile functions: qnorm, qunif,...
   ppf <- paste0("q", dist)
   xlim = c(do.call(ppf, c(0.001, params)), do.call(ppf, c(0.999, params)))
 
@@ -26,6 +23,10 @@ Distribution <- function(params, dist, discrete = TRUE){
   return(attribute)
 }
 
+# This has 'new' argument for if user wants to overlay this plot on
+# a RV plot().
+# Usage for that case: store a RV plot in a variable and pass that variable
+# in the 'new' argument.
 #' @export
 plot.Distribution <- function(self, type = NULL, alpha = 0.4,
                               xlim = NULL, new = NULL, ...){
@@ -40,7 +41,9 @@ plot.Distribution <- function(self, type = NULL, alpha = 0.4,
     xvals <- seq(xlower, xupper, length.out = 100)
 
   yvals <- self$pdf(xvals)
-  print(xvals)
+
+  # Since R does not have 'loc' parameter for nbinom like numpy to shift the
+  # distribution. This is implemented for shifting.
   if (inherits(self, "NegativeBinomial"))
     yvals <- self$pdf(xvals - self$params[[1]])
 
@@ -326,6 +329,9 @@ DiscreteUniform <- function(a = 0, b = 1){
 draw.DiscreteUniform <- function(self)
   return(sample(self$a : self$b, 1))
 
+#----------------------------------------------------------
+## Continuous Distributions
+#----------------------------------------------------------
 #' Defines a probability space for an uniform distribution.
 #'
 #' @param a (double): lower bound for possible values

@@ -1,5 +1,4 @@
 
-
 is_discrete <- function(heights){
   return(sum(heights > 1) > 0.8 * length(heights))
 }

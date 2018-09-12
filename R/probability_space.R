@@ -9,6 +9,7 @@
 #' @return ProbabilitySpace
 #' @export
 ProbabilitySpace <- function(DrawFunc, self = NULL, other = NULL){
+  # Have self and other to store ProbabilitySpaces when doing operations
   attribute <- list(
     draw = DrawFunc,
     self = self,
@@ -42,10 +43,11 @@ sim.default <- function(self, n)  stop("Could not perform the function on this o
 #' @return A vector containing the Simulation results.
 #' @export
 sim.ProbabilitySpace <- function(self, n){
+  # Vector
   if (length(draw(self)) == 1){
     return(Results(replicate(n, draw(self))))
   } else
-    return(Results(t(replicate(n, draw(self)))))
+    return(Results(t(replicate(n, draw(self))))) #Matrix
 }
 
 check_same <- function(self, other)  UseMethod("check_same")
@@ -61,32 +63,19 @@ check_same.ProbabilitySpace <- function(self, other){
     stop("Events must be defined on same probability space.")
 }
 
-
-# #' @export
-#`%*%` <- function(self, other) UseMethod("%*%")
-
-# #' @export
-#`%*%.default` <- base::`%*%`
-
 #' @export
 `*.ProbabilitySpace` <- function(self, other){
-
-  # Create function "dr" to pass to ProbabilitySpace. If I change this function's name
-  # to "draw" then R will be aborted since the function's name mess up with other method
-  # "draw".
+  # If I change this function's name to "draw" then R will be aborted since
+  # the function's name mess up with other method "draw".
   dr <- function(){
     return(c(draw(self), draw(other)))
   }
   return(ProbabilitySpace(dr, self, other))
 }
 
-# #' @export
-#`%^%` <- function(self, exponent)  UseMethod("%^%")
-# #' @export
-#`%^%.default` <- function(self, exponent)  stop("Could not perform the operation")
-
 #' @export
 `^.ProbabilitySpace` <- function(self, exponent){
+  # 'infinite' is not tested thoroughly
   if (is.infinite(exponent)){
     dr <- function(){
       seed <- get_seed()
@@ -100,18 +89,16 @@ check_same.ProbabilitySpace <- function(self, other){
       return(InfiniteSequence(x))
     }
   } else {
-
     dr <- function(){
       return(replicate(exponent, draw(self)))
     }
-
   }
   return(ProbabilitySpace(dr, self, exponent))
 }
 
 #---------------------------------------------------------------
 # ArbitrarySpace class
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#---------------------------------------------------------------
 ArbitrarySpace <- function(){
   attribute <- list(
     draw = function() 1
@@ -124,7 +111,7 @@ ArbitrarySpace <- function(){
 
 #---------------------------------------------------------------
 # Event class
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#---------------------------------------------------------------
 Event <- function(probSpace, fun){
   attribute <- list(probSpace = probSpace,
              fun = fun)
@@ -145,8 +132,6 @@ check_same_probSpace.Event <- function(self, other){
 
 #' @export
 `&` <- function(self, other) UseMethod("&", self)
-# # @export
-# `%&%.default` <- function(self, other) stop("Could not perform the operation")
 
 # define the event (A & B)
 #' @export
@@ -159,10 +144,12 @@ check_same_probSpace.Event <- function(self, other){
 }
 
 # define the event (A | B)
+# '|' is generic in R already but I need to specificly tell R that
+# '|' dispatch on the first argument. Otherwise, it would dispatch
+# both sides. And this would conflict with something like (X | (X == 3),
+# when both the RV X and the Event (X == 3) has '|' methods.
 #' @export
 `|` <- function(self, other) UseMethod("|", self)
-# # @export
-# `%|%.default` <- function(self, other) stop("Could not perform the operation")
 
 #' @export
 `|.Event` <- function(self, other){
@@ -174,11 +161,7 @@ check_same_probSpace.Event <- function(self, other){
 }
 
 # define the event (-A)
-# @export
-# `%~%` <- function(self) UseMethod("%~%")
-# # @export
-# `%~%.default` <- function(self) stop("Could not perform the operation")
-
+# '~' is not a unary operator in R. Thus, I replaced by "!"
 #' @export
 `!.Event` <- function(self){
   return(Event(self$probSpace, function(x) !self$fun(x)))
@@ -223,17 +206,16 @@ BoxModel <- function(box, size = 1, replace = TRUE,
   if (is.atomic(box)){
     self.box = box
 
+    # List is used in replace of Python's dictionary
+    # Look at my first tutorial for usage
   } else if (is.list(box)){
       self.box = unlist(lapply(
         seq_along(box), function(x) rep(names(box)[x], box[[x]])))
-      #print(self.box)
 
       tryCatch(
         self.box <- as.integer(self.box),
         warning = function(c) invisible()
       )
-
-      #print(self.box)
   } else
       stop("Box must be specified either as a vector or a list.")
 
@@ -260,15 +242,14 @@ BoxModel <- function(box, size = 1, replace = TRUE,
 #' with the specified probabilities.
 #' @export
 draw.BoxModel <- function(self){
-
   Draw_inds <- function(size){
     return(sample(length(self$box), size, self$replace, self$prob))
   }
 
+  # 'infinitite' is not tested thoroughly
   if (self$size == 1){
     return(self$box[Draw_inds(1)])
   } else if (is.infinite(self$size)) {
-#    warning("BoxModel with size = Inf will be implemented later")
 
     if (self$replace == FALSE)
       stop("Cannot draw an infinite number of tickets
@@ -295,7 +276,7 @@ draw.BoxModel <- function(self){
 
 #---------------------------------------------------------------
 # DeckOfCards class
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#---------------------------------------------------------------
 #' Defines the probability space for drawing from a deck of cards.
 #'
 #' @param size (int): How many draws to make.

@@ -32,17 +32,23 @@
 RV <- function(probSpace, fun = function(x) x){
   temp_p <- probSpace
 
-  #print("Inside 1")
+  # This whole thing below is for indexing (slicing) to get random vectors
+  # For example: z = RV(Normal() ^ 2), RV(Normal() * Uniform())
+  # x = z[[1]], y = z[[2]]
+  # When '^' or '*' is used, it returns a ProbablitySpace of length 3
+  # First, need to make sure a ProbabilitySpace of length 3 is passed in
   if (length(temp_p) == 3 && identical(names(temp_p), c("draw", "self", "other"))){
-    #print("Inside 2")
+    # This wrapper use closure to store an index number for indexing
     wrapper <- function(index) {
       true_index <- index
       function(x) fun(x)[true_index]
     }
+
     if (!is.numeric(temp_p$other)){
-      #print("Inside 3")
       # Count number of probSpace to initialize a list easier
       i <- 2
+
+      # Use a while-loop to count total number of probSpaces in the operations
       while (length(temp_p) == 3 && identical(c("list", "ProbabilitySpace"), class(temp_p))){
         if (length(temp_p$self) == 3 && identical(names(temp_p$self), c("draw", "self", "other"))){
           temp_p = temp_p$self
@@ -60,15 +66,14 @@ RV <- function(probSpace, fun = function(x) x){
         class(vect_of_rv[[i]]) <- append(class(vect_of_rv[[i]]), "RV")
       }
 
-    } else {
+    } else { # else if ProbSpace ^ 'number'
       vect_of_rv <- vector("list", temp_p$other)
-
 
       for (index in 1:length(vect_of_rv)){
 
         #inside the loop
         vect_of_rv[[index]] <- list(probSpace = probSpace,
-                                fun = wrapper(index))
+                                    fun = wrapper(index))
 
         class(vect_of_rv[[index]]) <- append(class(vect_of_rv[[index]]), "RV")
 
@@ -86,9 +91,7 @@ RV <- function(probSpace, fun = function(x) x){
     }
     vect_of_rv <- vector("list", probSpace$size)
 
-
     for (index in 1:length(vect_of_rv)){
-
       #inside the loop
       vect_of_rv[[index]] <- list(probSpace = probSpace,
                                   fun = wrapper(index))
@@ -96,19 +99,18 @@ RV <- function(probSpace, fun = function(x) x){
       class(vect_of_rv[[index]]) <- append(class(vect_of_rv[[index]]), "RV")
     }
 
-
     vect_of_rv[["probSpace"]] <- probSpace
     vect_of_rv[["fun"]] <- fun
     class(vect_of_rv) <- append(class(vect_of_rv), "RV")
     return(vect_of_rv)
+    # Else: if it's just a single ProbSpace, it goes to this 'else'
   } else {
     attribute <- list(probSpace = probSpace,
-               fun = fun)
+                      fun = fun)
 
     class(attribute) <- append(class(attribute), "RV")
     return(attribute)
   }
-
 }
 
 #' A function that takes no arguments and returns a single
@@ -130,13 +132,14 @@ draw.RV <- function(self){
 #' @return Results: A vector or matrix containing the simulation results.
 #' @export
 sim.RV <- function(self, n){
-
   if (length(draw(self)) == 1){
     return(RVResults((replicate(n, draw(self)))))
   } else
     return(RVResults(t(replicate(n, draw(self)))))
 }
 
+# This call method is created to mimic the _call_ method in Python
+# Used as call(X, outcome)
 #' @export
 call <- function(self, input) UseMethod("call")
 #' @export
@@ -178,7 +181,6 @@ the underlying probability space.\n")
     } else
       stop(paste("Expect a(n) ", typeof(dummy_draw), ". Was given
                  a(n) ", typeof(input), "."))
-
   }
 }
 
@@ -250,6 +252,7 @@ cos.RV <- function(self)
 tan.RV <- function(self)
   return(apply(self, tan))
 
+# Factorial is not a generic in R. Thus, UseMethod()
 #' @export
 factorial <- function(self) UseMethod("factorial")
 #' @export
@@ -267,7 +270,6 @@ log.RV <- function(self, base = exp(1))
 #------------------------------------------------------------
 # Operations
 #------------------------------------------------------------
-
 operation_factory <- function(self, op){
   op_fun <- function(self, other){
     check_same_probSpace(self, other)
@@ -276,7 +278,6 @@ operation_factory <- function(self, op){
     } else if (inherits(other, "RV")){
       fun <- function(outcome){
         a <- self$fun(outcome)
-        #print(paste("Here a: ", a))
         b <- other$fun(outcome)
         if (length(a) == length(b)){
           return(op(a, b))
@@ -288,11 +289,6 @@ operation_factory <- function(self, op){
       return("NotImplemented")
   }
 }
-
-# #' @export
-#`%+%` <- function(self, other) UseMethod("%+%")
-# #' @export
-#`%+%.default` <- function(self, other) stop("Could not perform the operation")
 
 # e.g., X + Y or X + 3
 #' @export
@@ -307,23 +303,6 @@ operation_factory <- function(self, op){
   }
 }
 
-# e.g., 3 + X
-# #' @export
-#`+.numeric` <- function(scalar, obj){
-#  return(obj + scalar)
-#}
-
-# #' @export
-# `%-%` <- function(self, other) UseMethod("%-%")
-# #' @export
-# `%-%.default` <- function(self, other) stop("Could not perform the operation")
-
-# e.g., 3 - X
-# #' @export
-#`%-%.numeric` <- function(scalar, obj){
-#  return(-1 %*% (obj %-% scalar))
-#}
-
 # e.g., X + Y or X + 3
 #' @export
 `-.RV` <- function(self, other){
@@ -334,18 +313,6 @@ operation_factory <- function(self, op){
     return(op_fun(self, other))
   }
 }
-
-# #' @export
-# `%/%` <- function(self, other) UseMethod("%/%")
-# # @export
-# `%/%.default` <- function(self, other) stop("Could not perform the operation")
-#
-# # e.g., 2 / X
-# # @export
-# `%/%.numeric` <- function(scalar, obj){
-#   op_fun <- operation_factory(obj, function(x, y) y / x)
-#   return(op_fun(obj, scalar))
-# }
 
 # e.g., X / Y or X / 2
 #' @export
@@ -374,12 +341,6 @@ operation_factory <- function(self, op){
   }
 }
 
-# e.g., 2 * X
-# @export
-# `%*%.numeric` <- function(scalar, obj){
-#   return(obj %*% scalar)
-# }
-
 # e.g., X ^ Y or X ^ 2
 #' @export
 `^.RV` <- function(self, other){
@@ -393,27 +354,16 @@ operation_factory <- function(self, op){
   }
 }
 
-#e.g., 2 ^ X
-# @export
-# `^.numeric` <- function(scalar, obj){
-#   op_fun <- operation_factory(obj, function(x, y) y ^ x)
-#   return(op_fun(obj, scalar))
-# }
-
 #' @export
 `&.RV` <- function(self, other){
   check_same_probSpace(self, other)
   #print(self$probSpace)
   #print(other$probSpace)
   if (inherits(other, "RV")){
-    # temp_ps <- self$probSpace %*% other$probSpace
-    #print(temp_ps)
     fun <- function(outcome) {
-      a <- self$fun(outcome) #[self$probSpace$order]
+      a <- self$fun(outcome)
+      b <- other$fun(outcome)
 
-      #print(a)
-      b <- other$fun(outcome) #[other$probSpace$order]
-      #print(b)
       return(c(a, b))
     }
     return(RV(self$probSpace, fun))
@@ -425,13 +375,7 @@ operation_factory <- function(self, op){
 ## The following operations all return Events
 ## (Events are used to define conditional distributions)
 #------------------------------------------------------------
-
 # e.g., X < 3
-# @export
-# `%<<%` <- function(self, other) UseMethod("%<<%")
-# # @export
-# `%<<%.default` <- function(self, other) stop("Could not perform the operation")
-
 #' @export
 `<.RV` <- function(self, other){
   if (is_scalar(other)){
@@ -445,11 +389,6 @@ operation_factory <- function(self, op){
 }
 
 # e.g., X <= 3
-# @export
-# `%<=%` <- function(self, other) UseMethod("%<=%")
-# # @export
-# `%<=%.default` <- function(self, other) stop("Could not perform the operation")
-
 #' @export
 `<=.RV` <- function(self, other){
   if (is_scalar(other)){
@@ -463,11 +402,6 @@ operation_factory <- function(self, op){
 }
 
 # e.g., X > 3
-# @export
-# `%>>%` <- function(self, other) UseMethod("%>>%")
-# # @export
-# `%>>%.default` <- function(self, other) stop("Could not perform the operation")
-
 #' @export
 `>.RV` <- function(self, other){
   if (is_scalar(other)){
@@ -481,11 +415,6 @@ operation_factory <- function(self, op){
 }
 
 # e.g., X >= 3
-# @export
-# `%>=%` <- function(self, other) UseMethod("%>=%")
-# # @export
-# `%>=%.default` <- function(self, other) stop("Could not perform the operation")
-
 #' @export
 `>=.RV` <- function(self, other){
   if (is_scalar(other)){
@@ -499,11 +428,6 @@ operation_factory <- function(self, op){
 }
 
 # e.g., X == 3
-# @export
-# `%==%` <- function(self, other) UseMethod("%==%")
-# # @export
-# `%==%.default` <- function(self, other) stop("Could not perform the operation")
-
 #' @export
 `==.RV` <- function(self, other){
   if (is_scalar(other) || is.character(other)){
@@ -517,11 +441,6 @@ operation_factory <- function(self, op){
 }
 
 # e.g., X != 3
-# @export
-# `%!=%` <- function(self, other) UseMethod("%!=%")
-# # @export
-# `%!=%.default` <- function(self, other) stop("Could not perform the operation")
-
 #' @export
 `!=.RV` <- function(self, other){
   if (is_scalar(other)){
@@ -535,12 +454,6 @@ operation_factory <- function(self, op){
 }
 
 # Define conditional distribution of random variable.
-# e.g., X | (X > 3)
-# @export
-# `%|%` <- function(self, condition_event) UseMethod("%|%")
-# # @export
-# `%|%.default` <- function(self, condition_event) stop("Could not perform the operation")
-
 #' @export
 `|.RV` <- function(self, condition_event){
   check_same_probSpace(self, condition_event)
@@ -563,7 +476,6 @@ operation_factory <- function(self, op){
 #' @examples
 #' X, Y = RV(Binomial(10, 0.4) ** 2)
 #' (X | (X + Y == 5)) %>% draw() # returns a value between 0 and 5.
-
 RVConditional <- function(RV, condition_event){
   attribute <- list(probSpace = RV$probSpace,
                     fun = RV$fun,
