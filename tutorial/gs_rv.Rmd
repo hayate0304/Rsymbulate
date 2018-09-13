@@ -1,11 +1,13 @@
 ---
 title: "Getting Started with Symbulate"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 # Section 2. Random Variables
 
-**Every time you start Symbulate**, you must first run (SHIFT-ENTER) the following commands.
+**Every time you start Symbulate**, you must first run (CTRL-SHIFT-ENTER) the following commands.
 
 ```{r}
 library(symbulate)
@@ -15,3 +17,541 @@ options(max.print = 100)
 This section provides an introduction to the Symbulate commands for simulating and summarizing values of a random variable.
 
 ### **Example 2.1: Counting the number of Heads in a sequence of coin flips**
+
+In Example 1.7 we simulated the value of the number of Heads in a sequence of five coin flips. In that example, we simulated the individual coin flips (with 1 representing Heads and 0 Tails) and then used .apply() with the sum function to count the number of Heads. The following Symbulate commands achieve the same goal by defining an  RV, X, which measures the number of Heads for each outcome.
+
+```{r}
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+X %>% sim(10000)
+```
+
+The number of Heads in five coin flips is a random variable: a function that takes as an input an outcome of a probability space and returns a real number. The first argument of RV is the probability space on which the RV is defined, e.g., sequences of five 1/0s. The second argument is the function which maps outcomes in the probability space to real numbers, e.g., the sum of the 1/0 values. Values of an RV can be simulated with .sim().
+
+### **Exercise 2.2: Sum of two dice**
+
+After defining an appropriate BoxModel probability space, define an RV X representing the sum of two six-sided fair dice, and simulate 10000 values of X.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 2.3: Summarizing simulation results with tables and plots**
+
+In Example 2.1 we defined a RV, X, the number of Heads in a sequence of five coin flips. Simulated values of a random variable can be summarized using .tabulate() (with normalize=False (default) for frequencies (counts) or True for relative frequencies (proportions)).
+
+```{r}
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+sims <- X %>% sim(10000)
+sims %>% tabulate()
+```
+
+The table above can be used to approximate the distribution of the number of Heads in five coin flips. The distribution of a random variable specifies the possible values that the random variable can take and their relative likelihoods. The distribution of a random variable can be visualized using .plot().
+
+```{r}
+sims %>% plot()
+```
+
+By default, .plot() displays relative frequencies (proportions). Use .plot(normalize=False) to display frequencies (counts).
+
+### **Exercise 2.4: The distribution of the sum of two dice rolls**
+
+Continuing Exercise 2.2 summarize with a table and a plot the distribution of the sum of two rolls of a fair six-sided die.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 2.5: Estimating probabilities from simulations**
+
+There are several other tools for summarizing simulations, like the count functions. For example, the following commands approximate P(X <= 3) for Example 2.1, the probability that in five coin flips at most three of the flips land on Heads.
+
+```{r}
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+sims <- X %>% sim(10000)
+sims %>% count_leq(3)/10000
+```
+
+### **Exercise 2.6: Estimating probabilities for the sum of two dice rolls**
+
+Continuing Exercise 2.2, estimate P(X >= 10), the probability that the sum of two fair six-sided dice is at least 10.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 2.7: Specifying a RV by its distribution**
+
+The plot in Example 2.3 displays the approximate distribution of the random variable X, the number of Heads in five flips of a fair coin. This distribution is called the Binomial distribution with  n<-5 trials (flips) and a probability that each trial (flip) results in success (1 i.e. Heads) equal to p<-0.5.
+
+In the above examples the RV X was explicitly defined on the probability space P - i.e. the BoxModel for the outcomes (1 or 0) of the five individual flips - via the sum function. This setup implied a Binomial(5, 0.5) distribution for X.
+
+In many situations the distribution of an RV is assumed or specified directly, without mention of the underlying probabilty space or the function defining the random variable. For example, a problem might state "let Y have a Binomial distribution with n<-5 and p<-0.5". The RV command can also be used to define a random variable by specifying its distribution, as in the following.
+
+```{r}
+Y <- RV(Binomial(5, 0.5))
+Y %>% sim(10000) %>% plot()
+```
+
+By definition, a random variable must always be a function defined on a probability space.  Specifying a random variable by specifying its distribution, as in `Y <- RV(Binomial(5, 0.5))`, has the effect of defining the probability space to be the distribution of the random variable and the function defined on this space to be the identity (`f(x) = x`). However, it is more appropriate to think of such a specification as defining a random variable with the given distribution on an *unspecified probability space* through an *unspecified function*.
+
+For example, the random variable $X$ in each of the following situations has a Binomial(5, 0.5) distribution.
+- $X$ is the number of Heads in five flips of a fair coin
+- $X$ is the number of Tails in five flips of a fair coin
+- $X$ is the number of even numbers rolled in five rolls of a fair six-sided die
+- $X$ is the number of boys in a random sample of five births
+
+Each of these situations involves a different probability space (coins, dice, births) with a random variable which counts according to different criteria (Heads, Tails, evens, boys).  These examples illustrate that knowledge that a random variable has a specific distribution (e.g. Binomial(5, 0.5)) does not necessarily convey any information about the underlying observational units or variable being measured.  This is why we say a specification like `X <- RV(Binomial(5, 0.5))` defines a random variable `X` on an unspecified probability space via an unspecified function.
+
+
+The following code compares the two methods for definiting of a random variable with a Binomial(5, 0.5) distribution.  (The `jitter=True` option offsets the vertical lines so they do not coincide.)
+
+```{r}
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+X %>% sim(10000) %>% plot(jitter=TRUE)
+
+Y <- RV(Binomial(5, 0.5))
+Y %>% sim(10000) %>% plot(jitter=TRUE)
+```
+
+In addition to Binomial, many other commonly used distributions are built in to Symbulate.
+
+### **Exercise 2.8:  Simulating from a discrete Uniform model**
+
+A random variable has a DiscreteUniform distribution with parameters a and b if it is equally likely to to be any of the integers between a and b (inclusive). Let X be the roll of a fair six-sided die. Define an RV X by specifying an appropriate DiscreteUniform distribution, then simulate 10000 values of X and summarize its approximate distribution in a plot.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 2.9: Random variables versus distributions**
+
+Continuing Example 2.1, if X is the random variable representing number of Heads in five coin flips then Y <- 5 - X is random variable representing the number of Tails.
+
+```{r}
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+Y <- 5 - X
+Y %>% sim(10000) %>% tabulate()
+```
+
+It is important not to confuse a random variable with its distribution.  Note that `X` and `Y` are two different random variables; they measure different things.  For example, if the outcome of the flips is `(1, 0, 0, 1, 0)` then `X <- 2` but `Y <- 3`.  The following code illustrates how an `RV` can be called as a function to return its value for a particular outcome in the probability space.
+
+```{r}
+outcome <- c(1, 0, 0, 1, 0)
+call(X, outcome)
+call(Y, outcome)
+```
+
+In fact, in this example the values of `X` and `Y` are unequal for every outcome in the probability space .  However, while `X` and `Y` are two different random variables, they do have the same distribution over many outcomes.
+
+```{r}
+X %>% sim(10000) %>% plot(jitter=T)
+Y %>% sim(10000) %>% plot(jitter=T)
+```
+
+See Example 2.7 for further comments about the difference between random variables and distributions.
+
+### **Example 2.10: Expected value of the number of heads in five coin flips**
+
+The expected value, or probability-weighted average value, of an RV can be approximated by simulating many values of the random variable and finding the sample mean (i.e. average) using .mean(). Continuing Example 2.1, the following code estimates the expected value of the number of Heads in five coin flips.
+
+```{r}
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+X %>% sim(10000) %>% mean()
+```
+
+Over many sets of five coin flips, we expect that there will be on average about 2.5 Heads per set. Note that 2.5 is not the number of Heads we would expect in a single set of five coin flips.
+
+### **Exercise 2.11: Expected value of the sum of two dice rolls**
+
+Continuing Exercise 2.2, approximate the expected value of the sum of two six-sided dice rolls. (Bonus: interpret the value as an appropriate long run average.)
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 2.12: Standard deviation of the number of Heads in five coin flips**
+
+The expected value of an RV is its long run average, while the standard deviation of an RV measures the average degree to which individual values of the RV vary from the expected value. The standard deviation of an RV can be approximated from simulated values with .sd(). Continuing Example 2.1, the following code estimates the standard deviation of the number of Heads in five coin flips.
+
+```{r}
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+sims <- X %>% sim(10000)
+sims %>% sd()
+```
+
+Inspecting the plot in Example 2.3 we see there are many simulated values of 2 and 3, which are 0.5 units away from the expected value of 2.5. There are relatively fewer values of 0 and 5 which are 2.5 units away from the expected value of 2.5. Roughly, the simulated values are on average 1.1 units away from the expected value.
+
+*Variance* is the square of the standard deviation and can be approximated with .var().
+
+```{r}
+sims %>% var()
+```
+
+### **Exercise 2.13: Standard deviation of the sum of two dice rolls**
+
+Continuing Exercise 2.2, approximate the standard deviation of the sum of two six-sided dice rolls. (Bonus: interpret the value.)
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 2.14: Continuous random variables**
+
+The RVs we have seen so far have been discrete. A discrete random variable can take at most countably many distinct values. For example, the number of Heads in five coin flips can only take values 0, 1, 2, 3, 4, 5.
+
+A continuous random variable can take any value in some interval of real numbers. For example, if X represents the height of a randomly selected U.S. adult male then X is a continuous random variable. Many continuous random variables are assumed to have a Normal distribution. The following simulates values of the RV X assuming it has a Normal distribution with mean 69.1 inches and standard deviation 2.9 inches.
+
+```{r}
+X <- RV(Normal(mean=69.1, sd=2.9))
+sims <- X %>% sim(10000)
+```
+
+The same simulation tools are available for both discrete and continuous RVs. Calling .plot() for a continuous RV produces a histogram which displays frequencies of simulated values falling in interval "bins".
+
+```{r}
+sims %>% plot()
+```
+
+The number of bins can be set using the bins= option in .plot()
+
+```{r}
+X %>% sim(10000) %>% plot(bins=60)
+```
+
+It is not recommended to use .tabulate() with continuous RVs as almost all simulated values will only occur once.
+
+### **Exercise 2.15: Simulating from a (continuous) uniform distribution**
+
+The continuous analog of a BoxModel is a Uniform distribution which produces "equally likely" values in an interval with endpoints a and b. (What would you expect the plot of such a distribution to look like?)
+
+Let X be a random variable which has a Uniform distribution on the interval [0, 1]. Define an appropriate RV and use simulation to display its approximate distribution. (Note that the underlying probability space is unspecified.)
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 2.16: Transformations of random variables**
+
+In Example 2.9 we defined a new random variable Y <- 5 - X (the number of Tails) by transforming the RV X (the number of Heads). A transformation of an RV is also an RV. If X is an RV, define a new random variable  Y <- g(X) using X %>% apply(g). The resulting Y behaves like any other RV. Note that for arithmetic operations and many common math functions (such as exp, log, sin) you can simply call g(X) rather than X %>% apply(g).
+
+Continuing Example 2.1, let X represent the number of Heads in five coin flips and define the random variable Y <- sqrt(X). The plot below approximates the distribution of Y; note that the possible values of Y are 0, 1, sqrt(2), sqrt(3), 2 and sqrt(3)
+
+```{r}
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+Y <- X %>% apply(sqrt)
+Y %>% sim(10000) %>% plot()
+```
+
+The following code uses a `g(X)` definition rather than `X %>% apply(g)`.
+
+```{r}
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+Y <- sqrt(X)
+Y %>% sim(10000) %>% plot()
+```
+
+### **Exercise 2.17 Function of a RV that has a Uniform distribution**
+
+In Example 2.15 we encountered uniform distributions. Let  UU  be a random variable which has a Uniform distribution on the interval [0, 1]. Use simulation to display the approximate distribution of the random variable  Y= − log(U).
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 2.18: Number of switches between Heads and Tails in coin flips**
+
+RVs can be defined or transformed through user defined functions. As an example, let Y be the number of times a sequence of five coin flips switches between Heads and Tails (not counting the first toss). For example, for the outcome (0, 1, 0, 0, 1), a switch occurs on the second third, and fifth flip so Y <- 3. We define the random variable Y by first defining a function that takes as an input a list of values and returns as an output the number of times a switch from the previous value occurs in the sequence. (Defining functions is one area where some familiarity with Python is helpful.)
+
+```{r}
+number_switches <- function(x){
+    count <- 0
+    for (i in 2:length(x))
+        if (x[i] != x[i-1])
+            count <- count + 1
+    return(count)
+}
+number_switches(c(1, 1, 1, 0, 0, 1, 0, 1, 1, 1))
+```
+
+Now we can use the `number_switches` function to define the `RV` `Y` on the probability space corresponding to five flips of a fair coin.
+
+```{r}
+P <- BoxModel(c(1, 0), size=5)
+Y <- RV(P, number_switches)
+
+outcome <- c(0, 1, 0, 0, 1)
+call(Y, outcome)
+```
+
+An RV defined or transformed through a user-defined function behaves like any other RV.
+
+```{r}
+Y %>% sim(10000) %>% plot()
+```
+
+### **Exercise 2.19: Number of distinct faces rolled in 6 rolls**
+
+Let X count the number of distinct faces rolled in 6 rolls of a fair six-sided die. For example, if the result of the rolls is (3, 3, 3, 3, 3, 3) then X <- 1; if (6, 4, 5, 4, 6, 6) then X<-3; etc. Use the number_distinct_values function defined below to define the RV X on an appropriate probability space. Then simulate values of X and plot its approximate distribution. (The number_distinct_values function takes as an input a list of values and returns as an output the number of distinct values in the list. We have used the Python functions set and len.)
+
+```{r}
+number_distinct_values <- function(x)
+  return(length(unique(x)))
+
+number_distinct_values(c(1, 1, 4))
+```
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+# Additional Exercises
+
+### **Exercise 2.20: Max of two dice rolls**
+
+1) Approximate the distribution of the max of two six-sided dice rolls.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+2) Approximate the probability that the max of two six-sided dice rolls is greater than or equal to 5.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+3) Approximate the mean and standard deviation of the max of two six-sided dice rolls.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Exercise 2.21: Transforming a random variable**
+
+Let X have a Uniform distribution on the interval [0, 3] and let $Y <- 2\cos(X)$.
+
+1) Approximate the distribution of Y.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+2) Approximate the probability that Y is less than 1.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+3) Approximate the mean and standard deviation of Y.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Exercise 2.22: Function of a random variable.**
+
+Let $X$ be a random variable which has a Normal(0,1) distribution.  Let $Y <- e^X$.
+
+1) Use simulation to display the approximate distribution of $Y$.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+2) Approximate the probability that the $Y$ is greater than 2.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+3) Approximate the mean and standard deviation of $Y$.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+# Hints for Additional Exercises
+
+### **Exercise 2.20: Hint**
+
+In Exercise 2.2 we simulated the sum of two six-sided dice rolls. Define an RV using the max function to return the larger of the two rolls. In Example 2.5 we estimated the probability of a random variable taking a value. In Example 2.10 we applied the .mean() funtion to return the long run expected average. In Example 2.12 we estimated the standard deviation.
+
+### **Exercise 2.21: Hint**
+
+Example 2.9 introduces transformations. In Exercise 2.15 we simulated an RV that had a Uniform distribution. In Example 2.5 we estimated the probabilities for a RV. In Example 2.10 we applied the  .mean() funtion to return the long run expected average. In Example 2.12 we estimated the standard deviation.
+
+### **Exercise 2.22: Hint**
+
+In Example 2.14 we simulated an RV with a Normal distribution. In Example 2.9 we defined a random variable as a function of another random variable. In Example 2.5 we estimated the probability of a random variable taking a value. In Example 2.10 we applied the .mean() funtion to return the long run expected average. In Example 2.12 we estimated the standard deviation.
+
+# Solutions to Exercises
+
+## **Exercise 2.2: Solution**
+
+```{r}
+P <- BoxModel(1:6, size=2)
+X <- RV(P, sum)
+X %>% sim(10000)
+```
+
+## **Exercise 2.4: Solution**
+
+```{r}
+P <- BoxModel(1:6, size=2)
+X <- RV(P, sum)
+sims <- X %>% sim(10000)
+sims %>% tabulate(normalize <- T)
+```
+```{r}
+sims %>% plot()
+```
+
+## **Exercise 2.6: Solution**
+
+```{r}
+P <- BoxModel(1:6, size=2)
+X <- RV(P, sum)
+sims <- X %>% sim(10000)
+sims %>% count_geq(10) / 10000
+```
+
+## **Exercise 2.8: Solution**
+
+```{r}
+X <- RV(DiscreteUniform(a=1, b=6))
+X %>% sim(10000) %>% plot(normalize=T)
+```
+
+## **Exercise 2.11: Solution**
+
+```{r}
+P <- BoxModel(1:6, size=2)
+X <- RV(P, sum)
+X %>% sim(10000) %>% mean()
+```
+Over many pairs of rolls of fair six-sided dice, we expect that on average the sum of the two rolls will be about 7.
+
+## **Exercise 2.13: Solution**
+
+```{r}
+P <- BoxModel(1:6, size=2)
+X <- RV(P, sum)
+X %>% sim(10000) %>% sd()
+```
+Over many pairs of rolls of fair six-sided dice, the values of the sum are on average roughly 2.4 units away from the expected value of 7.
+
+## **Exercise 2.15: Solution**
+
+```{r}
+X <- RV(Uniform(a=0, b=1))
+X %>% sim(10000) %>% plot()
+```
+
+## **Exercise 2.17: Solution**
+
+```{r}
+U <- RV(Uniform(a=0, b=1))
+Y <- 0 - log(U)
+Y %>% sim(10000) %>% plot()
+```
+Note that the RV has an Exponential(1) distribution.
+
+## **Exercise 2.19: Solution**
+
+```{r}
+number_distinct_values <- function(x)
+  return(length(unique(x)))
+
+P <- BoxModel(1:6, size=6)
+X <- RV(P, number_distinct_values)
+X %>% sim(10000) %>% plot()
+```
+
+## **Exercise 2.20: Solution**
+
+1) Approximate the distribution of the max of two six-sided dice rolls.
+
+```{r}
+P <- BoxModel(1:6, size=6)
+X <- RV(P, max)
+sims <- X %>% sim(10000)
+sims %>% plot()
+```
+
+2) Approximate the probability that the max of two six-sided dice rolls is greater than or equal to 5.
+
+```{r}
+sims %>% count_geq(5) / 10000
+```
+
+3) Approximate the mean and standard deviation of the max of two six-sided dice rolls.
+
+```{r}
+sims %>% mean()
+sims %>% sd()
+```
+
+## **Exercise 2.21: Solution**
+
+1) Approximate the distribution of $Y$.
+
+```{r}
+X <- RV(Uniform(0, 3))
+Y <- 2 * cos(X)
+sims <- Y %>% sim(10000)
+sims %>% plot()
+```
+
+Alternatively,
+```{r}
+X <- RV(Uniform(0, 3))
+Y <- 2 * X %>% apply(cos)
+sims <- Y %>% sim(10000)
+sims %>% plot()
+```
+
+2) Approximate the probability that the Y is less than 2.
+
+```{r}
+sims %>% count_lt(1)/10000
+```
+
+3) Approximate the mean and standard deviation of Y.
+
+```{r}
+sims %>% mean()
+sims %>% sd()
+```
+
+## **Exercise 2.22: Solution**
+
+1) Use simulation to display the approximate distribution of Y.
+
+```{r}
+X <- RV(Normal(0, 1))
+Y <- exp(X)
+sims <- Y %>% sim(10000)
+sims %>% plot()
+```
+
+2) Approximate the probability that the Y is greater than 2.
+
+```{r}
+sims %>% count_gt(2)/10000
+```
+
+3) Approximate the mean and standard deviation of Y.
+
+```{r}
+sims %>% mean()
+sims %>% sd()
+```

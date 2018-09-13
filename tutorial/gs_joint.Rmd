@@ -1,0 +1,346 @@
+---
+title: "Getting Started with Symbulate"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+# Section 3. Multiple Random Variables and Joint Distributions
+
+**Every time you start Symbulate**, you must first run (CTRL-SHIFT-ENTER) the following commands.
+
+```{r}
+library(symbulate)
+options(max.print <- 100)
+```
+
+This section provides an introduction to the Symbulate commands for simulating and summarizing values of multiple random variables.
+
+We are often interested in several RVs defined on the same probability space. Of interest are properties of the joint distribution which describe the relationship between the random variables.
+
+### **Example 3.1: The joint distribution of the number of Heads and the number of switches between Heads and Tails in coin flips**
+
+Let X be the number of Heads in a sequence of five coin flips, and let Y be the number of times the sequence switches between Heads and Tails (not counting the first toss). For example, for the outcome (0, 1, 0, 0, 1), X = 2 and since a switch occurs on the second, third, and fifth flip, Y = 3. The code below defines the probability space and the two RVs. The RV Y is defined through a user defined function; see Example 2.18.
+
+```{r}
+number_switches <- function(x){
+    count <- 0
+    for (i in 2:length(x))
+        if (x[i] != x[i-1])
+            count <- count + 1
+    return(count)
+}
+
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+Y <- RV(P, number_switches)
+
+outcome <- c(0, 1, 0, 0, 1)
+call(X, outcome)
+call(Y, outcome)
+```
+
+Each RV X and Y can be simulated individually as in Section 2. Within the context of several random variables, the distribution of a single random variable is called its marginal distribution. The plot below approximates the marginal distribution of Y, the number of switches between Heads and Tails in five coin flips. Note that Y can take values 0, 1, 2, 3, 4.
+
+```{r}
+Y %>% sim(10000) %>% plot()
+```
+
+However, simulating values of X and Y individually does not provide any information about the relationship between the variables. Joining X and Y with an ampersand & and calling .sim() simultaneously simulates the pair of (X, Y) values for each simulated outcome. The simulated results can be used to approximate the joint distribution of X and Y which describes the possible pairs of values and their relative likelihoods.
+
+```{r}
+(X & Y) %>% sim(10000) %>% tabulate()
+```
+
+Simulating `(X, Y)` pairs in this way, we can examine the relationship between the random variables `X` and `Y`.  For example, for an outcome with `X = 5` all five flips are Heads so no switches occur and it must be true that `Y <- 0`.  For outcomes with `X = 4`, either `Y = 1` or `Y = 2`, with a value of 2 occuring more frequently. Thus while `Y` can marginally take values 0, 1, 2, 3, 4, only `Y = 0` is possible when `X = 5`, only `Y = 1` or `Y = 2` is possible when `X = 4`, and so on.  Also, for example, outcomes for which `X = 2` and `Y = 3` occur about four times as frequently as those for which `X = 5` and `Y = 0`.
+
+### **Exercise 3.2: Joint distribution of the sum and the max of two dice rolls**
+
+Roll two fair six-sided dice and let X be their sum and Y be the larger (max) of the two numbers rolled (or the common value if a tie).
+
+Define appropriate RVs and simulate 10000 (X, Y) pairs using & and sim(). Tabulate the results.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 3.3: Visualizing a joint distribution**
+
+The simluated joint distribution in Example 3.1 can be visualized by calling .plot(). Calling .plot() for two discrete random variables returns a scatterplot of simulated (X,Y) pairs.
+
+```{r}
+(X & Y) %>% sim(10000) %>% plot()
+```
+
+For discrete random variables it is recommended to use the jitter=TRUE option with scatterplots so that points do not overlap.
+
+```{r}
+(X & Y) %>% sim(10000) %>% plot(type="scatter", jitter=T)
+```
+
+### **Exercise 3.4: Visualizing the joint distribution of the sum and the max of two dice rolls**
+
+Continuing Exercise 3.2 let X be the sum and Y be the larger (max) of two rolls of a fair six-sided die.
+
+Simulate 10000 (X, Y) pairs using & and sim(). Display the approximate joint distribution with scatterplot (with jitter=TRUE).
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 3.5: Defining independent random variables**
+
+Random variables X and Y are independent if knowing information about the value of one does not influence the distribution of the other. For independent random variables, their joint distribution is the product of the respective marginal distributions.
+
+For example, let X represent the number of Heads in two flips of a fair coin, and let Y represent the number of 1s rolled in three rolls of a fair six-sided die.
+
+```{r}
+Flips <- BoxModel(c(1, 0), size=2)
+X <- RV(Flips, sum)
+
+Rolls <- BoxModel(c(1, 0), probs=c(1/6, 5/6), size=3)  # 1 <- roll 1; 0 <- do not roll 1
+Y <- RV(Rolls, sum)
+```
+
+When pairs of independent random variables are simulated, the values of one variable are generated independently of the values of the other.
+
+```{r}
+# Need to implement AssumeIndependent before doing this exercise
+#(X & Y) %>% sim(1000) %>% tabulate()
+```
+
+For example, the joint probability P(X = 1, Y = 2), which is about 0.035, is equal to the product of the marginal probabilities P(X = 1) and P(Y = 2), as approximated in the following code.
+
+```{r}
+(X %>% sim(10000) %>% count_eq(1) / 10000) * (Y %>% sim(10000) %>% count_eq(2) / 10000)
+```
+
+### **Exercise 3.6: Using AssumeIndependent for defining independent random variables**
+
+Let X be the number of heads in five flips of a fair coin and Y be the sum of two rolls of a fair six-sided die. Define appropriate RVs. Simulate 10000 (X, Y) pairs and plot the approximate joint distribution.
+
+```{r}
+# To be implemented: AssumeIndependence before doing this exericise
+```
+
+### **Example 3.7: Defining independent random variables via distributions**
+
+We have seen that it is common to define a random variable via its distribution, as in Example 2.7. When dealing with multiple random variables it is common to specify the marginal distribution of each and assume independence. In Example 3.5, the marginal distribution of X is Binomial with  n=2 and p=0.5 while the marginal distribution of Y is Binomial with n=3 and p=1/6. Independence of distributions is represented by the asterisks * (reflecting that under independence the joint distribution is the product of the respective marginal distributions.)
+
+```{r}
+Z <- RV(Binomial(n=2, p=0.5) * Binomial(n=3, p=1/6))
+X <- Z[[1]]
+Y <- Z[[2]]
+(X & Y) %>% sim(10000) %>% tabulate()
+```
+
+Random variables are "independent and identically distribution (i.i.d.)" when they are independent and have a common marginal distribution. For example, if V represents the number of heads in two flips of a penny and W the number of Heads in two flips of a dime, then V and W are i.i.d., with a common marginal Binomial(n=2, p=0.5) distribution. For i.i.d. random variables, defining the joint distribution using the "exponentiation" notation ** makes the code a little more compact.
+
+```{r}
+Z <- RV(Binomial(n=2, p=0.5) ** 2)
+V <- Z[[1]]
+W <- Z[[2]]
+```
+
+### **Exercise 3.8: Defining independent random variables**
+
+Let X be a random variable with a Binomial(n=4, p=0.25) distribution, and let Y be a random variable with a Binomial(n=3, p=0.7) distribution. Use * to specify the joint distribution of the RVs X and Y as the product of their marginal distributions. Simulate 10000 (X,Y) pairs and approximate the joint distribution.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 3.9: Sum of independent RVs**
+
+In Example 2.16 we introduced transformations of random variables. It is often of interest to look at a transformation of multiple random variables. Transformations of random variables such as addition, subtraction, etc. are only possible when the random variables are defined on the same probability space.
+
+For example, assume that X and Y are independent and that each of X and Y has a marginal Uniform distribution on [0, 1]. Define the random variable Z <- X + Y, the sum of two independent RVs X and Y.
+
+```{r}
+R <- RV(Uniform(0, 1) * Uniform(0, 1))
+X <- Z[[1]]
+Y <- Z[[2]]
+Z <- X + Y
+Z %>% sim(10000) %>% plot()
+```
+
+Notice that Z takes values in the interval [0, 2], but Z does not have a Uniform distribution. Intuitively, there is only one (X, Y) pair, (0, 0), for which the sum is 0, but many  (X, Y) pairs - (1, 0), (0, 1), (0.5, 0.5), (0.8, 0.2), etc - for which the sum is 1.
+
+### **Exercise 3.10: Product of independent RVs**
+
+Let `X` represent the base (inches) and `Y` the height (inches) of a "random rectangle".  Assume that `X` and `Y` are independent, and that `X` has a `Uniform(2, 5)` distribution and `Y` has a `Uniform(1, 3)` distribution. Let `Z <- X * Y` represent the area of the rectangle. Simulate 10000 values of `Z` and display its approximate distribution in a plot.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Example 3.11: Correlation between random variables**
+
+The strength of the relationship between two random variables can be estimated with the correlation coefficient of the simulated pairs using .corr(). For example, let X represent the number of Heads in two flips of a penny and let Y represent the number of Heads in three flips of a dime. Then Z <- X + Y is the total number of Heads in the five flips. The following code simulates many (X, Z) pairs and estimates their correlation
+
+```{r}
+R <- RV(Binomial(n=2, p=0.5) * Binomial(n=3, p=0.5))
+X <- R[[1]]
+Y <- R[[2]]
+Z <- X + Y
+xz <- (X & Z) %>% sim(10000)
+xz %>% plot(jitter=T)
+xz %>% cor()
+```
+The positive correlation coefficient of about 0.6 represents a *positive associaton*: above average values of `X` tend to be associated with above average values of `Z`; likewise for below average values.
+
+If two random variables are independent, then there is no association between them and so their correlation coefficient is 0.
+
+```{r}
+xy <- (X & Y) %>% sim(10000)
+xy %>% plot(jitter=T)
+xy %>% cor()
+```
+
+However, a correlation coefficient of 0 does not necessarily imply that random variables are independent.  Correlation measures a particular kind of relationship, namely, how strong is the *linear association* between two random variables?  That is, how closely do the $(x, y)$ pairs tend to follow a straight line?
+
+Consider Example 3.1: X is the number of Heads in a sequence of five coin flips, and Y is the number of times the sequence switches between Heads and Tails (not counting the first toss). Then  X and Y are not independent. For example, if X=0 then it must be true that Y=0. However, the correlation coefficient between X and Y is 0.
+
+```{r}
+number_switches <- function(x){
+    count <- 0
+    for (i in 2:length(x))
+        if(x[i] != x[i-1])
+            count <- count + 1
+    return(count)
+}
+
+P <- BoxModel(c(1, 0), size=5)
+X <- RV(P, sum)
+Y <- RV(P, number_switches)
+xy <- (X & Y) %>% sim(10000)
+xy %>% plot(jitter=T)
+xy %>% cor()
+```
+
+### **Exercise 3.12: Correlation between the sum and the max of two dice**
+
+Continuing Exercise 3.2, display the approximate joint distribution of X and Y, the sum and the max, respectively, of two fair six-sided dice rolls, and estimate the correlation coefficient.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+# **Additional Exercises**
+
+### **Exercise 3.13: Ratio of max and sum of two six-sided dice**
+
+Define Z as the ratio between the larger of two six-sided dice rolls and the sum of two six-sided dice rolls. Approximate the distribution of Z and estimate `P(Z <= 1.5)`, the probability that the ratio is less than or equal to 0.7.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+### **Exercise 3.14: Estimating correlation and plotting joint distributions**
+
+Suppose X is Uniform(0,2) and Y is Uniform(1,3). Define Z to be equal to X + Y (assuming X and Y are independent).
+
+1) Estimate the correlation coefficient between X and Z. 
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+2) Approximate the joint distribution of X and Z.
+
+```{r}
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
+```
+
+# **Hints for Additional Exercises**
+
+## **Exercise 3.13: Hint**
+
+In Exercise 3.2 you simulated the sum and max of two dice. In Exercise 3.10 you simulated the product of two random variables. Use a count function to estimate P(Z <= 1.5).
+
+## **Exercise 3.14: Hint**
+
+In Example 3.11 we estimated the correlation coefficient between two random variables and plotted the joint distribution. In Example 3.9 we defined a random variable as the sum of two other independent variables.
+
+# **Solutions to Exercises**
+
+### **Exercise 3.2: Solution**
+
+```{r}
+P <- BoxModel(1:6, size=2)
+X <- RV(P, sum)
+Y <- RV(P, max)
+(X & Y) %>% sim(10000) %>% tabulate()
+```
+
+### **Exercise 3.4: Solution**
+
+```{r}
+P <- BoxModel(1:6, size=2)
+X <- RV(P, sum)
+Y <- RV(P, max)
+(X & Y) %>% sim(10000) %>% plot(type="scatter", jitter=T)
+```
+
+### **Exercise 3.8: Solution**
+
+```{r}
+Z <- RV(Binomial(n=4, p=0.25) * Binomial(n=3, p=0.7))
+X <- Z[[1]]
+Y <- Z[[2]]
+
+(X & Y) %>% sim(10000) %>% plot()
+```
+
+### **Exercise 3.10: Solution**
+
+```{r}
+R <- RV(Uniform(a=2, b=5) * Uniform(a=1, b=3))
+X <- R[[1]]
+Y <- R[[2]]
+Z <- X * Y
+Z %>% sim(10000) %>% plot()
+```
+
+Note that `Z` takes values in the interval `[2 * 1, 5 * 3]` but some values have greater density than others.
+
+### **Exercise 3.12: Solution**
+
+```{r}
+P <- BoxModel(1:6, size=2)
+X <- RV(P, sum)
+Y <- RV(P, max)
+xy <- (X & Y) %>% sim(10000)
+xy %>% plot(jitter=T)
+xy %>% cor()
+```
+
+### **Exercise 3.13: Solution**
+
+```{r}
+P <- BoxModel(1:6, size=2)
+X <- RV(P, sum)
+Y <- RV(P, max)
+Z <- Y / X
+sims <- Z %>% sim(10000)
+sims %>% plot()
+sims %>% count_leq(0.7) / 10000
+```
+
+
+### **Exercise 3.14: Solution**
+
+1) Estimate the correlation coefficient between X and Z.
+```{r}
+R <- RV(Uniform(0, 2) * Uniform(1, 3))
+X <- R[[1]]
+Y <- R[[2]]
+Z <- X + Y
+(X & Z) %>% sim(10000) %>% cor()
+```
+
+2) Approximate the joint distribution of X and Z.
+```{r}
+(X & Z) %>% sim(10000) %>% plot()
+```
+

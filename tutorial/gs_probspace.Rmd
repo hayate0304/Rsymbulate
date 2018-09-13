@@ -7,7 +7,7 @@ output:
 
 ## **Section 1. Probability Spaces**
 
-**Every time you start Symbulate**, you must first run (SHIFT-ENTER) the following commands
+**Every time you start Symbulate**, you must first run (CTRL-SHIFT-ENTER) the following commands
 
 ```{r}
 library(symbulate)
@@ -22,7 +22,7 @@ The following commands simulate a single flip of a fair coin.
 
 ```{r}
 flip <- BoxModel(c("Heads", "Tails"))
-flip %>% Draw()
+flip %>% draw()
 ```
 
 A BoxModel is a simple example of a probability space. The first line above creates a box with two tickets, "Heads" and "Tails". The second line draws a ticket from this box at random and returns the result of the draw. (By default each ticket is equally likely to be selected. This can be changed with the probs argument.)
@@ -34,7 +34,7 @@ Many simple probability models can be thought of as drawing tickets from a box, 
 Use BoxModel and draw() to simulate a single roll of a fair six-sided die.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 ### **Example 1.3: A sequence of five coin flips**
@@ -43,32 +43,32 @@ The following commands simulate five flips of a fair coin. Note that it is often
 
 ```{r}
 flips <- BoxModel(c(1,0), size=5)
-flips %>% Draw()
+flips %>% draw()
 ```
 
 The first argument of BoxModel creates a box with two tickets, 0 and 1, and the second argument, size, determines the number of tickets to draw from the box. (By default, each ticket is replaced before the next draw; this can be changed with the replace argument.)
 
 ### **Exercise 1.4: Rolling a pair of six-sided dice**
 
-Use BoxModel with the size argument and Draw() to simulate rolling two fair six-sided die.
+Use BoxModel with the size argument and draw() to simulate rolling two fair six-sided die.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
-### **Example 1.5: Simulating multiple draws with Sim()**
+### **Example 1.5: Simulating multiple draws with sim()**
 
-In Example 1.3 one draw consisted of a sequence of five coin flips. The following commands simulate 10000 such draws using Sim()
+In Example 1.3 one draw consisted of a sequence of five coin flips. The following commands simulate 10000 such draws using sim()
 
 ```{r}
 flips <- BoxModel(c(1,0), size=5)
-flips %>% Sim(10000)
+flips %>% sim(10000)
 ```
-Note that every time Sim() is called new values are simulated. Store simulated values as a variable in order to perform multiple operations in different lines of code on the same set of values.
+Note that every time sim() is called new values are simulated. Store simulated values as a variable in order to perform multiple operations in different lines of code on the same set of values.
 
 ```{r}
 flips <- BoxModel(c(1,0), size=5)
-sims <- flips %>% Sim(10000) 
+sims <- flips %>% sim(10000) 
 sims
 ```
 Be careful not to confuse the "sample size" of a single outcome (e.g. size=5 for 5 flips) with the number of outcomes to simulate (.sim(10000) for 10000 simulated outcomes).
@@ -77,27 +77,27 @@ Be careful not to confuse the "sample size" of a single outcome (e.g. size=5 for
 
 1) Simulate 3 sequences of 5 coin flips each.
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 2) Simulate 5 sequences of 3 coin flips each.
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
-### **Example 1.7: Counting the number of Heads in a sequence of coin flips**
+### **Example 1.7: counting the number of Heads in a sequence of coin flips**
 
 With 1 representing Heads and 0 Tails, the number of Heads in a sequence of coin flips can be counted by summing the 0/1 values. Calling .draw() below simulates a single draw from P, a sequence of 0s and 1s representing five coin flips, and then these values are summed to return the number of Heads.
 
 ```{r}
 P <- BoxModel(c(1,0), 5)
-sum(P %>% Draw())
+sum(P %>% draw())
 ```
 The above code simulates the value of the number of Heads in a single sequence of five coin flips. Many such values can be simulated using .sim() followed by the .apply() method to apply the sum function to each simulated outcome.
 
 ```{r}
 P <- BoxModel(c(1,0), 5)
-P %>% Sim(10000) %>% Apply(sum)
+P %>% sim(10000) %>% apply(sum)
 ```
 The number of Heads in a sequence of five coin flips is an example of a random variable (RV). Section 2 of the tutorial covers random variables in more detail.
 
@@ -106,30 +106,30 @@ The number of Heads in a sequence of five coin flips is an example of a random v
 Use BoxModel, .sim(), and .apply() to simulate 10000 values of the sum of two six-sided dice rolls.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 ### **Example 1.9: Summarizing simulation results and estimating probabilities**
 
-In Example 1.7 we simulated 10000 values of the number of Heads in five flips of a coin. The simulated values can be summarized using Tabulate().
+In Example 1.7 we simulated 10000 values of the number of Heads in five flips of a coin. The simulated values can be summarized using tabulate().
 
 ```{r}
 P <- BoxModel(c(1,0), 5)
-sims <- P %>% Sim(10000) %>% Apply(sum)
-sims %>% Tabulate()
+sims <- P %>% sim(10000) %>% apply(sum)
+sims %>% tabulate()
 ```
-We can see, for example, that it is much more likely to obtain 3 Heads than 0 Heads in 5 flips of a coin. By default, Tabulate() displays frequencies (counts). Use Tabulate(normalize=TRUE) to display relative frequencies (proportions). The probability of a random event can be estimated by its simulated relative frequency.
+We can see, for example, that it is much more likely to obtain 3 Heads than 0 Heads in 5 flips of a coin. By default, tabulate() displays frequencies (counts). Use tabulate(normalize=TRUE) to display relative frequencies (proportions). The probability of a random event can be estimated by its simulated relative frequency.
 
 ```{r}
-sims %>% Tabulate(normalize = TRUE)
+sims %>% tabulate(normalize = TRUE)
 ```
 There are several other tools for summarizing simulations, like the count functions below. (Displaying output in a plot will be covered in Section 2 of the tutorial.)
 
 ```{r}
-sims %>% Count_eq(2) / 10000
+sims %>% count_eq(2) / 10000
 ```
 ```{r}
-sims %>% Count_leq(2) / 10000
+sims %>% count_leq(2) / 10000
 ```
 
 ### **Exercise 1.10: Summarizing simulation results for dice rolls**
@@ -139,13 +139,13 @@ In Exercise 1.8 you simulated 10000 values of the sum of two six-sided dice roll
 1) Create a table of relative frequencies of the simulated values.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 2) Use a count function to estimate the probability that the sum of two dice rolls is greater than nine. (Bonus: try doing this several ways.)
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 ### **Example 1.11: Other common probability models - Binomial**
@@ -153,23 +153,23 @@ In Exercise 1.8 you simulated 10000 values of the sum of two six-sided dice roll
 The second table in Example 1.9 displays the approximate distribution of the number of Heads in five flips of a fair coin. This distribution is called the Binomial distribution with n=5 flips and a probability that each flip lands on Heads equal to p=0.5. The number of Heads can be simulated from this Binomial distribution directly, without first simulating the individual coin flips.
 
 ```{r}
-Binomial(n=5, p=0.5) %>% Sim(10000) %>% Tabulate()
+Binomial(n=5, p=0.5) %>% sim(10000) %>% tabulate()
 ```
 
 In addition to Binomial, many other commonly used probability spaces are built in to Symbulate.
 
 ### **Exercise 1.12: Simulating from a Binomial model**
 
-1) Use Binomial and Sim() to simulate 10000 values of the number of Heads in a sequence of 10 coin flips and tabulate the results.
+1) Use Binomial and sim() to simulate 10000 values of the number of Heads in a sequence of 10 coin flips and tabulate the results.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 2) Use a count function to estimate the probability of getting 7 or more heads out of 10 coin flips.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 ### **Example 1.13: Rolling different dice**
@@ -178,16 +178,16 @@ In Exercise 1.4 we simulated a pair of rolls of a six-sided die using BoxModel w
 
 ```{r}
 rolls <- BoxModel(1:6) %*% BoxModel(1:4)
-rolls %>% Draw()
+rolls %>% draw()
 ```
 Note that the outcome of the draw is a pair of values. The product %*% notation indicates that that the two rolls are independent.
 
 ### **Exercise 1.14: Independent random numbers**
 
-Draw two random whole numbers, first an odd number and then an even number, between 1 and 10 (inclusive). Hint: Use two BoxModels, one for odd and one for even, and combine them with %*%.
+draw two random whole numbers, first an odd number and then an even number, between 1 and 10 (inclusive). Hint: Use two BoxModels, one for odd and one for even, and combine them with %*%.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 ### **Example 1.15: BoxModel with non-equally likely tickets**
@@ -196,19 +196,19 @@ By default BoxModel assumes that each ticket is equally likely, but there are se
 
 ```{r}
 die <- BoxModel(c(1, 2, 2, 3, 3, 4))
-die %>% Sim(10000) %>% Tabulate(normalize = TRUE)
+die %>% sim(10000) %>% tabulate(normalize = TRUE)
 ```
 Rather than repeating values, we can specify a BoxModel by each of the possible values along with the number of tickets with that value, as in the following.
 
 ```{r}
 die <- BoxModel(list("1" = 1, "2" = 2, "3" = 2, "4" = 1))
-die %>% Sim(10000) %>% Tabulate(normalize = TRUE)
+die %>% sim(10000) %>% tabulate(normalize = TRUE)
 ```
 A non-equally likely BoxModel can also be defined using the probs argument, by specifying a probability value for each ticket.
 
 ```{r}
 die <- BoxModel(1:4, probs = c(1/6, 2/6, 2/6, 1/6))
-die %>% Sim(10000) %>% Tabulate(normalize = TRUE)
+die %>% sim(10000) %>% tabulate(normalize = TRUE)
 ```
 Notice that the relative frequencies are close to the specified probabilities.
 
@@ -217,7 +217,7 @@ Notice that the relative frequencies are close to the specified probabilities.
 A certain weighted coin lands on heads 75% of the time and tails 25% of the time. Use BoxModel with the probs argument to simulate and summarize many flips of the weighted coin.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 ## Additional Exercises
@@ -227,7 +227,7 @@ A certain weighted coin lands on heads 75% of the time and tails 25% of the time
 Use simulation to approximate the distribution of the sum of a six-sided die and a four-sided die.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 ### **Exercise 1.18: Estimating probabilities of the sum of different dice**
@@ -235,7 +235,7 @@ Use simulation to approximate the distribution of the sum of a six-sided die and
 Suppose we have a special six-sided die that has one face with a 1, one face with a 2, two faces with a 3, and two faces with 4. We also have a fair four-sided die. Use simulation to estimate the probability that the sum of these two dice is at least to 6.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 ### **Exercise 1.19: Summarizing multiple draws of weighted coin flips**
@@ -245,13 +245,13 @@ Consider a certain coin that lands on heads 60% of the time and tails 40% of the
 1) Approximate the distribution of the number of heads in four flips of this coin by first simulating the individual flips.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 2) Approximate the distribution of the number of heads in four flips of this coin by simulating directly from a Binomial distribution.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 ### **Exercise 1.20: Max of two dice rolls**
@@ -259,14 +259,14 @@ Consider a certain coin that lands on heads 60% of the time and tails 40% of the
 Approximate the distribution of the larger of two rolls of a fair six-sided die, and estimate the probability that the larger of the two rolls is at least 5.
 
 ```{r}
-### Type your commands in this cell and then run using SHIFT-ENTER.
+### Type your commands in this cell and then run using CTRL-SHIFT-ENTER.
 ```
 
 ## Hints for Additional Exercises
 
 ### **Exercise 1.17: Hint**
 
-In Exercise 1.8 we simulated the value of the number of Heads in a single sequence of 1/0 coin flips by using Apply() with the sum function. In Example 1.13 we simulated rolling a six-sided die and a four-sided die.
+In Exercise 1.8 we simulated the value of the number of Heads in a single sequence of 1/0 coin flips by using apply() with the sum function. In Example 1.13 we simulated rolling a six-sided die and a four-sided die.
 
 ### **Exercise 1.18: Hint**
 
@@ -280,7 +280,7 @@ In Example 1.9 we estimated the probability of a random event using a count func
 
 ### **Exercise 1.20: Hint**
 
-In Exercise 1.8 we simulated the sum of two rolls. To find the larger of the two rolls use Apply() with the max function. Use .tabulate() to summarize the approximate distribution and a .count function to approximate the probability.
+In Exercise 1.8 we simulated the sum of two rolls. To find the larger of the two rolls use apply() with the max function. Use .tabulate() to summarize the approximate distribution and a .count function to approximate the probability.
 
 ## Solutions to Exercises
 
@@ -288,14 +288,14 @@ In Exercise 1.8 we simulated the sum of two rolls. To find the larger of the two
 
 ```{r}
 die <- BoxModel(1:6)
-die %>% Draw()
+die %>% draw()
 ```
 
 ### **Exercise 1.4: Solution**
 
 ```{r}
 die <- BoxModel(1:6, size = 2)
-die %>% Draw()
+die %>% draw()
 ```
 
 ### **Exercise 1.6: Solution**
@@ -303,20 +303,20 @@ die %>% Draw()
 1) Simulate 3 sequences of 5 coin flips each.
 
 ```{r}
-BoxModel(c(1, 0), size=5) %>% Sim(3)
+BoxModel(c(1, 0), size=5) %>% sim(3)
 ```
 
 2) Simulate 5 sequences of 3 coin flips each.
 
 ```{r}
-BoxModel(c(1, 0), size=3) %>% Sim(5)
+BoxModel(c(1, 0), size=3) %>% sim(5)
 ```
 
 ### **Exercise 1.8: Solution**
 
 ```{r}
 dice <- BoxModel(1:6, size=2)
-dice %>% Sim(10000) %>% Apply(sum)
+dice %>% sim(10000) %>% apply(sum)
 ```
 
 ### **Exercise 1.10: Solution**
@@ -325,108 +325,96 @@ dice %>% Sim(10000) %>% Apply(sum)
 
 ```{r}
 dice <- BoxModel(1:6, size = 2)
-sims <- dice %>% Sim(10000) %>% Apply(sum)
-sims %>% Tabulate(normalize = TRUE)
+sims <- dice %>% sim(10000) %>% apply(sum)
+sims %>% tabulate(normalize = TRUE)
 ```
 
 2) Use a count function to estimate the probability that the sum of two dice rolls is greater than nine. (Bonus: try doing this several ways.)
 
 ```{r}
-sims %>% Count_gt(9) / 10000
+sims %>% count_gt(9) / 10000
 ```
 
 ```{r}
-sims %>% Count_geq(10) / 10000
+sims %>% count_geq(10) / 10000
 ```
 
 ```{r}
-1 - sims %>% Count_leq(9) / 10000
+1 - sims %>% count_leq(9) / 10000
 ```
 
 ```{r}
-1 - sims %>% Count_lt(10) / 10000
+1 - sims %>% count_lt(10) / 10000
 ```
 
 ### **Exercise 1.12: Solution**
 
-1) Use Binomial and Sim() to simulate 10000 values of the number of Heads in a sequence of 10 coin flips and tabulate the results.
+1) Use Binomial and sim() to simulate 10000 values of the number of Heads in a sequence of 10 coin flips and tabulate the results.
 
 ```{r}
-sims <- Binomial(n=10, p=0.5) %>% Sim(10000)
-sims %>% Tabulate()
+sims <- Binomial(n=10, p=0.5) %>% sim(10000)
+sims %>% tabulate()
 ```
 
 2) Use a count function to estimate the probability of getting 7 or more heads out of 10 coin flips.
 
 ```{r}
-sims %>% Count_geq(7) / 10000
+sims %>% count_geq(7) / 10000
 ```
 
 ### **Exercise 1.14: Solution**
 
 ```{r}
 P <- BoxModel(c(1, 3, 5, 7, 9)) %*% BoxModel(c(2, 4, 6, 8, 10))
-P %>% Draw()
+P %>% draw()
 ```
 
 ### **Exercise 1.16: Solution**
 
 ```{r}
 coin <- BoxModel(c("Heads", "Tails"), probs = c(0.75, 0.25))
-coin %>% Sim(10000) %>% Tabulate()
+coin %>% sim(10000) %>% tabulate()
 ```
 
 ### **Exercise 1.17: Solution**
 
 ```{r}
 rolls <- BoxModel(1:6) %*% BoxModel(1:4)
-sums <- rolls %>% Sim(10000) %>% Apply(sum)
-sums %>% Tabulate(normalize = T)
+sums <- rolls %>% sim(10000) %>% apply(sum)
+sums %>% tabulate(normalize = T)
 ```
 
 ### **Exercise 1.18: Solution**
 
 ```{r}
 rolls <- BoxModel(list("1" = 1, "2" = 1, "3" = 2, "4" = 2)) %*% BoxModel(1:4)
-sims <- rolls %>% Sim(10000) %>% Apply(sum)
-sims %>% Count_geq(6) / 10000
+sims <- rolls %>% sim(10000) %>% apply(sum)
+sims %>% count_geq(6) / 10000
 ```
 
 ### **Exercise 1.19: Solution**
 
-1) Use simulation to display the relative frequencies of the number of heads in 4 flips of the special coin using an Apply() function.
+1) Use simulation to display the relative frequencies of the number of heads in 4 flips of the special coin using an apply() function.
 
 ```{r}
 coins <- BoxModel(c(1, 0), probs = c(0.6, 0.4), size = 4)
-coins %>% Sim(10000) %>% Apply(sum) %>% Tabulate(normalize = T)
+coins %>% sim(10000) %>% apply(sum) %>% tabulate(normalize = T)
 ```
 
 2) Use simulation to display the relative frequencies of the number of heads in 4 flips of the special coin using the Binomial distribution.
 
 ```{r}
-Binomial(n=4, p=0.6) %>% Sim(10000) %>% Tabulate(normalize = T)
+Binomial(n=4, p=0.6) %>% sim(10000) %>% tabulate(normalize = T)
 ```
 
 ### **Exercise 1.20: Solution**
 
 ```{r}
 dice <- BoxModel(1:6, size = 2)
-sims <- dice %>% Sim(10000) %>% Apply(max)
-sims %>% Tabulate(normalize = T)
+sims <- dice %>% sim(10000) %>% apply(max)
+sims %>% tabulate(normalize = T)
 ```
 
 ```{r}
-sims %>% Count_geq(5) / 10000
+sims %>% count_geq(5) / 10000
 ```
-
-
-
-
-
-
-
-
-
-
-
-

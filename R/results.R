@@ -422,12 +422,12 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
                                         fill = color(), aes(x=self$results, y=..density..),
                                         alpha = alpha,
                                         breaks=seq(min(x), max(x), (max(x)-min(x))/30),
-                                        na.rm = TRUE)
+                                        na.rm = T)
       } else{
         hist <- ggplot2::geom_histogram(bins = bins,
                                         fill = color(), alpha = alpha, aes(x = self$results),
                                         breaks=seq(min(x), max(x), (max(x)-min(x))/30),
-                                        na.rm = TRUE)
+                                        na.rm = T)
       }
 
       g <- ggplot2::ggplot() +
@@ -454,7 +454,7 @@ plot.RVResults <- function(self, type=NULL, alpha=NULL, normalize=TRUE,
 
       g <- ggplot2::ggplot() +
         geom_segment(data = tb, aes(x=Outcome, xend=Outcome, y=0, yend=Value),
-                     color = color(), alpha = alpha, na.rm = TRUE) +
+                     color = color(), alpha = alpha, na.rm = T) +
         labs(y=ylab, x="")
     }
   } else if (dim == 2){

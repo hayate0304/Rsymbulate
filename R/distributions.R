@@ -61,12 +61,11 @@ plot.Distribution <- function(self, type = NULL, alpha = 0.4,
 
   if (self$discrete){
     g <- g +
-      geom_point(aes(x=xvals, y=yvals, alpha = alpha, ...), size = 2.5, color = col) +
-      geom_line(aes(x=xvals, y=yvals, alpha = alpha, ...), color = col)
+      geom_point(aes(x=xvals, y=yvals, alpha = alpha, ...), size = 2.5, color = col, na.rm = T) +
+      geom_line(aes(x=xvals, y=yvals, alpha = alpha, ...), color = col, na.rm = T)
   } else{
     g <- g +
-      geom_line(aes(x=xvals, y=yvals, alpha = alpha, ...), color = col, size = 1.2,
-                na.rm = TRUE)
+      geom_line(aes(x=xvals, y=yvals, alpha = alpha, ...), color = col, size = 1.2, na.rm = T)
 
   }
 
@@ -343,7 +342,7 @@ Uniform <- function(a=0.0, b=1.0){
 
   params <- list(a, b)
 
-  attribute <- Distribution(params, "unif", F)
+  attribute <- Distribution(params, "unif", FALSE)
 
   class(attribute) <- append("Uniform", class(attribute), after = 1)
   attribute$xlim = c(a, b)
@@ -385,7 +384,7 @@ Normal <- function(mean=0.0, sd=1.0, var=NULL){
 
   params <- list(mean, scale)
 
-  attribute <- Distribution(params, "norm", F)
+  attribute <- Distribution(params, "norm", FALSE)
   attribute[["mean"]]= mean
   attribute[["scale"]]= scale
 
@@ -575,7 +574,7 @@ draw.ChiSquare <- function(self)
 #' @param dfN (int): degrees of freedom in the numerator
 #' @param dfD (int): degrees of freedom in the denominator
 #' @export
-F <- function(dfN, dfD){
+Fdist <- function(dfN, dfD){
   if (dfN < 0)
     stop("dfN must be greater than 0")
 
@@ -589,7 +588,7 @@ F <- function(dfN, dfD){
   attribute[["dfN"]]= dfN
   attribute[["dfD"]]= dfD
 
-  class(attribute) <- append("F", class(attribute))
+  class(attribute) <- append("Fdist", class(attribute))
   return(attribute)
 }
 
